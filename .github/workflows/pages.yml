@@ -41,9 +41,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
+          git add index.html app-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
           if ! git diff --cached --quiet; then
-            git commit -m "Refresh V5 runtime and football imagery"
+            git commit -m "Refresh V5 runtime, mode wiring and football imagery"
             git push
           fi
 
@@ -52,6 +52,7 @@ jobs:
           timeout 10s node --check app-v5.js
           timeout 10s node --check cloud-v5.js
           timeout 10s node --check data-v5.js
+          timeout 10s node --check data-v5-plus.js
           timeout 10s node --check scripts/patch-v5.mjs
           timeout 10s node --check scripts/build-manager-images-v5.mjs
           timeout 10s node --check tests/validate-v5.mjs
@@ -76,6 +77,9 @@ jobs:
           test -s index.html
           test -s app-v5.js
           test -s data-v5.js
+          test -s data-v5-plus.js
+          test -s cloud-v5.js
           test -s images-v4.js
           test -s manager-images-v5.js
+          grep -q 'data-v5-plus.js' index.html
           echo "V5 production bundle verified. GitHub Pages branch deployment publishes main automatically."
