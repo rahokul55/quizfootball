@@ -1,7 +1,7 @@
 import {chromium} from 'playwright-core';import fs from 'node:fs';
 const paths=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'],executablePath=paths.find(fs.existsSync);if(!executablePath)throw new Error('Chrome missing');
 const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--disable-dev-shm-usage','--autoplay-policy=no-user-gesture-required']});
-const aCtx=await browser.newContext({viewport:{width:1280,height:900}}),bCtx=await browser.newContext({viewport:{width:1280,height:900}}),a=await aCtx.newPage(),b=await bCtx.newPage(),base='http://127.0.0.1:4173/';
+const aCtx=await browser.newContext({viewport:{width:1280,height:900}}),bCtx=await browser.newContext({viewport:{width:1280,height:900}}),a=await aCtx.newPage(),b=await bCtx.newPage(),base=process.env.QF_TEST_BASE||'http://127.0.0.1:4173/';
 const log=x=>console.log('[ADV E2E]',x),active=(p,id)=>p.waitForFunction(id=>document.getElementById(id)?.classList.contains('active'),id,{timeout:12000});
 async function save(p,n){await p.locator('#profileNameInput').fill(n);await p.locator('#saveProfileBtn').click();await p.waitForFunction(n=>document.querySelector('#profileNameText')?.textContent===n,n)}
 async function chooseMode(p,group,id){await p.locator(`.mode-tab[data-group="${group}"]`).click();await p.locator(`.mode-card[data-mode="${id}"]`).click()}
