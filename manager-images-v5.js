@@ -1,0 +1,1 @@
+window.QF_MANAGER_IMAGES={};
