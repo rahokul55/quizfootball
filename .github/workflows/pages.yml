@@ -15,7 +15,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 14
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -30,6 +30,9 @@ jobs:
       - name: Apply V5 runtime safety patches
         run: timeout 15s node scripts/patch-v5.mjs
 
+      - name: Apply V5 multiplayer resilience patches
+        run: timeout 15s node scripts/patch-multiplayer-v5.mjs
+
       - name: Resolve player and team images
         run: timeout 180s node scripts/build-images-v4.mjs
 
@@ -43,7 +46,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html app-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
           if ! git diff --cached --quiet; then
-            git commit -m "Refresh V5 runtime, mode wiring and football imagery"
+            git commit -m "Refresh V5 runtime, multiplayer resilience and football imagery"
             git push
           fi
 
@@ -55,11 +58,13 @@ jobs:
           timeout 10s node --check data-v5-plus.js
           timeout 10s node --check data-v5-arcade.js
           timeout 10s node --check scripts/patch-v5.mjs
+          timeout 10s node --check scripts/patch-multiplayer-v5.mjs
           timeout 10s node --check scripts/build-manager-images-v5.mjs
           timeout 10s node --check tests/validate-v5.mjs
           timeout 10s node --check tests/validate-v5-advanced.mjs
           timeout 10s node --check tests/e2e-v5.mjs
           timeout 10s node --check tests/e2e-v5-advanced.mjs
+          timeout 10s node --check tests/e2e-v5-migration.mjs
 
       - name: V5 base data modes and rules QA
         run: timeout 30s node tests/validate-v5.mjs
@@ -86,6 +91,14 @@ jobs:
           sleep 1
           QF_TEST_BASE=http://127.0.0.1:4174/ timeout 120s node tests/e2e-v5-advanced.mjs
 
+      - name: V5 three-client host migration QA
+        run: |
+          python3 -m http.server 4175 --bind 127.0.0.1 >/tmp/quizfootball-http-migration.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+          QF_TEST_BASE=http://127.0.0.1:4175/ timeout 120s node tests/e2e-v5-migration.mjs
+
       - name: Verify production files
         run: |
           test -s index.html
@@ -98,4 +111,5 @@ jobs:
           test -s manager-images-v5.js
           grep -q 'data-v5-plus.js' index.html
           grep -q 'data-v5-arcade.js' index.html
+          grep -q 'function promoteToHost' app-v5.js
           echo "V5 production bundle verified. GitHub Pages branch deployment publishes main automatically."
