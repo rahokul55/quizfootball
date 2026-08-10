@@ -15,7 +15,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 16
+    timeout-minutes: 18
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -29,6 +29,9 @@ jobs:
 
       - name: Apply V5 runtime safety patches
         run: timeout 15s node scripts/patch-v5.mjs
+
+      - name: Apply V5 custom match laboratory patches
+        run: timeout 15s node scripts/patch-custom-v5.mjs
 
       - name: Apply V5 multiplayer resilience patches
         run: timeout 15s node scripts/patch-multiplayer-v5.mjs
@@ -52,7 +55,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html app-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
           if ! git diff --cached --quiet; then
-            git commit -m "Refresh V5 runtime, multiplayer resilience, social layer and production wiring"
+            git commit -m "Refresh V5 runtime, custom matches, multiplayer, social layer and wiring"
             git push
           fi
 
@@ -65,23 +68,30 @@ jobs:
           timeout 10s node --check data-v5.js
           timeout 10s node --check data-v5-plus.js
           timeout 10s node --check data-v5-arcade.js
+          timeout 10s node --check data-v5-custom.js
           timeout 10s node --check scripts/patch-v5.mjs
+          timeout 10s node --check scripts/patch-custom-v5.mjs
           timeout 10s node --check scripts/patch-multiplayer-v5.mjs
           timeout 10s node --check scripts/patch-social-v5.mjs
           timeout 10s node --check scripts/patch-ui-extras-v5.mjs
           timeout 10s node --check scripts/build-manager-images-v5.mjs
           timeout 10s node --check tests/validate-v5.mjs
           timeout 10s node --check tests/validate-v5-advanced.mjs
+          timeout 10s node --check tests/validate-v5-custom.mjs
           timeout 10s node --check tests/e2e-v5.mjs
           timeout 10s node --check tests/e2e-v5-advanced.mjs
           timeout 10s node --check tests/e2e-v5-migration.mjs
           timeout 10s node --check tests/e2e-v5-social.mjs
+          timeout 10s node --check tests/e2e-v5-custom.mjs
 
       - name: V5 base data modes and rules QA
         run: timeout 30s node tests/validate-v5.mjs
 
       - name: V5 advanced modes QA
         run: timeout 30s node tests/validate-v5-advanced.mjs
+
+      - name: V5 custom match laboratory QA
+        run: timeout 30s node tests/validate-v5-custom.mjs
 
       - name: Install browser QA runtime
         run: npm install --no-save --no-package-lock playwright-core@1.55.0
@@ -118,6 +128,14 @@ jobs:
           sleep 1
           QF_TEST_BASE=http://127.0.0.1:4176/ timeout 120s node tests/e2e-v5-social.mjs
 
+      - name: V5 custom match laboratory browser QA
+        run: |
+          python3 -m http.server 4177 --bind 127.0.0.1 >/tmp/quizfootball-http-custom.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+          QF_TEST_BASE=http://127.0.0.1:4177/ timeout 120s node tests/e2e-v5-custom.mjs
+
       - name: Verify production files
         run: |
           test -s index.html
@@ -125,16 +143,21 @@ jobs:
           test -s data-v5.js
           test -s data-v5-plus.js
           test -s data-v5-arcade.js
+          test -s data-v5-custom.js
           test -s cloud-v5.js
           test -s extras-v5.js
           test -s sw-v5.js
           test -s social-v5.css
+          test -s custom-v5.css
           test -s images-v4.js
           test -s manager-images-v5.js
           grep -q 'data-v5-plus.js' index.html
           grep -q 'data-v5-arcade.js' index.html
+          grep -q 'data-v5-custom.js' index.html
           grep -q 'extras-v5.js' index.html
           grep -q 'social-v5.css' index.html
+          grep -q 'custom-v5.css' index.html
           grep -q 'function promoteToHost' app-v5.js
           grep -q 'function sendReaction' app-v5.js
+          grep -q 'function installCustomControls' app-v5.js
           echo "V5 production bundle verified. GitHub Pages branch deployment publishes main automatically."
