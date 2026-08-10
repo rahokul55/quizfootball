@@ -2,7 +2,7 @@
 function optionCount(v){v=+v;return[4,6,8].includes(v)?v:6}
 function roundCount(v){v=+v;return[25,50,100].includes(v)?v:100}
 function rng(str){let h=2166136261;for(const c of String(str)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return()=>{h+=0x6D2B79F5;let r=h;r=Math.imul(r^r>>>15,r|1);r^=r+Math.imul(r^r>>>7,r|61);return((r^r>>>14)>>>0)/4294967296}}
-function shuf(a,r=Math.random){a=[...a];for(let i=a.length-1;i;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function shuf(a,r=Math.random){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function buildOptions(D,c,count=6,seed="preview"){
   count=optionCount(count);const r=rng(seed+":"+c.id+":"+count),answer=D.players[c.answer],target=count-1;if(!answer)return[];
   const safe=Object.values(D.players).filter(p=>p.id!==c.answer&&!(p.clubs.includes(c.teamA)&&p.clubs.includes(c.teamB)));
