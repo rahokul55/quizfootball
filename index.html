@@ -4,76 +4,116 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#07111f" />
-  <meta name="description" content="Quiz Football — arkadaşlarınla gerçek zamanlı futbolcu bağlantı oyunu." />
-  <title>Quiz Football — European Night</title>
+  <meta name="description" content="Quiz Football V5 — rekabetçi, chill ve solo futbol bağlantı oyunu." />
+  <title>Quiz Football V5 — Football Nights</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="preconnect" href="https://upload.wikimedia.org" crossorigin>
-  <link rel="preconnect" href="https://www.thesportsdb.com" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=420" />
-  <link rel="stylesheet" href="enhancements-v4.css?v=420" />
+  <link rel="stylesheet" href="styles.css?v=500" />
+  <link rel="stylesheet" href="enhancements-v4.css?v=500" />
+  <link rel="stylesheet" href="v5.css?v=500" />
 </head>
 <body data-theme="royal">
   <div class="sky" aria-hidden="true"><div class="stars stars-a"></div><div class="stars stars-b"></div><div class="stadium-glow"></div></div>
   <div class="arena-bg" aria-hidden="true"><div class="orb orb-a"></div><div class="orb orb-b"></div><div class="pitch-light"></div><div class="stadium-arc"></div></div>
 
-  <header class="topbar">
-    <button class="brand" id="brandBtn" aria-label="Ana sayfa"><span class="brand-mark">✦</span><span><b>QUIZ</b> FOOTBALL</span></button>
-    <div class="top-actions"><button id="soundBtn" class="icon-btn" title="Sesi aç/kapat" aria-label="Sesi aç/kapat">🔊</button><button id="fullscreenBtn" class="icon-btn" title="Tam ekran" aria-label="Tam ekran">⛶</button></div>
+  <header class="topbar v5-topbar">
+    <button class="brand" id="brandBtn" aria-label="Ana sayfa"><span class="brand-mark">✦</span><span><b>QUIZ</b> FOOTBALL <small>V5</small></span></button>
+    <div class="v5-profile-pill" id="profilePill"><span class="profile-avatar" id="profileAvatar">QF</span><span><b id="profileNameText">Oyuncu</b><small><span id="profileRatingText">1000</span> RP • Lv.<span id="profileLevelText">1</span></small></span></div>
+    <div class="top-actions">
+      <button id="leaderboardBtn" class="icon-btn wide-icon" title="Global sıralama">🏆 <span>Sıralama</span></button>
+      <button id="profileBtn" class="icon-btn" title="Profil">◉</button>
+      <button id="soundBtn" class="icon-btn" title="Sesi aç/kapat">🔊</button>
+      <button id="fullscreenBtn" class="icon-btn" title="Tam ekran">⛶</button>
+    </div>
   </header>
 
-  <main class="app-shell">
+  <main class="app-shell v5-shell">
     <section id="homeScreen" class="screen active">
-      <div class="hero glass">
-        <div class="hero-topline"><div class="hero-kicker">EUROPEAN NIGHT EDITION</div><span class="season-chip">FAST MULTIPLAYER</span></div>
-        <h1>İki kulüp. Bir ortak futbolcu.<br><span>İlk bilen puanı kapar.</span></h1>
-        <p class="hero-copy">Süre yok. Bekleme yok. İlk doğru seçim puanı alır ve oyun anında bir sonraki karta akar.</p>
-        <div class="home-grid">
-          <div class="home-card accent-card"><div class="card-num">01</div><h2>Oda Kur</h2><p>Arkadaşların için özel maç odası oluştur.</p><label for="createName">Kullanıcı adı</label><input id="createName" maxlength="18" autocomplete="nickname" placeholder="Kullanıcı adını yaz" /><button id="createRoomBtn" class="primary-btn">Yeni Oda Oluştur <span>→</span></button></div>
-          <div class="home-card"><div class="card-num">02</div><h2>Odaya Katıl</h2><p>Oda kodunu gir ve maça bağlan.</p><label for="joinName">Kullanıcı adı</label><input id="joinName" maxlength="18" autocomplete="nickname" placeholder="Kullanıcı adını yaz" /><label for="joinCode">Oda kodu</label><input id="joinCode" maxlength="8" autocapitalize="characters" spellcheck="false" placeholder="ABC123" /><button id="joinRoomBtn" class="secondary-btn">Odaya Katıl <span>→</span></button></div>
+      <div class="hero glass v5-hero">
+        <div class="hero-topline"><div class="hero-kicker">FOOTBALL NIGHTS • SEASON 1</div><span class="season-chip" id="cloudChip">GLOBAL SKOR BAĞLANIYOR</span></div>
+        <div class="v5-hero-copy"><div><h1>Rekabet et. Rahatla. <span>Kendini geliştir.</span></h1><p>Futbolcular, teknik direktörler ve karma bağlantılar. Kart sayısı yerine süreyle biten maçlar, ranked düellolar ve tek oyunculu antrenmanlar.</p></div><div class="hero-stat"><b id="homeModeCount">16</b><span>OYUN MODU</span></div></div>
+
+        <div class="profile-setup" id="profileSetup">
+          <label for="profileNameInput">Kullanıcı adın</label>
+          <div class="profile-input-row"><input id="profileNameInput" maxlength="18" autocomplete="nickname" placeholder="Bir kez yaz, cihazında kayıtlı kalsın"/><button id="saveProfileBtn" class="secondary-btn compact-btn">Kaydet</button></div>
+          <small>Kullanıcı adı bu cihazda otomatik hatırlanır; sonraki girişlerinde tekrar yazman gerekmez.</small>
         </div>
-        <div class="feature-strip"><span>⚡ Anında tur geçişi</span><span>👥 2–4 oyuncu</span><span>🖼 Ön yüklemeli gerçek görseller</span><span>🎵 Maç boyu stadyum müziği</span></div>
+
+        <div class="mode-tabs" role="tablist">
+          <button class="mode-tab active" data-group="competitive">🔥 Rekabetçi</button>
+          <button class="mode-tab" data-group="chill">🌙 Chill</button>
+          <button class="mode-tab" data-group="solo">🎯 Tek Oyuncu</button>
+        </div>
+        <div id="modeGrid" class="mode-grid"></div>
+
+        <div class="launch-grid">
+          <article class="launch-card primary-launch">
+            <div><span class="launch-label">SEÇİLİ MOD</span><h2 id="selectedModeName">Klasik 25</h2><p id="selectedModeDesc">25 kartlık saf ilk-bilen maçı.</p></div>
+            <button id="createRoomBtn" class="primary-btn">Oda Kur <span>→</span></button>
+            <button id="soloStartBtn" class="secondary-btn">Tek Başına Başlat</button>
+          </article>
+          <article class="launch-card">
+            <span class="launch-label">ARKADAŞINA KATIL</span><h2>Oda kodun var mı?</h2><div class="join-row"><input id="joinCode" maxlength="8" autocapitalize="characters" spellcheck="false" placeholder="ABC123"/><button id="joinRoomBtn" class="secondary-btn">Katıl</button></div>
+            <label class="check-row"><input id="spectatorJoin" type="checkbox"/> Oyun başladıysa seyirci olarak katıl</label>
+          </article>
+        </div>
+        <div class="feature-strip v5-features"><span>⚡ İlk doğru kilidi</span><span>⏱ 3–10 dk maçlar</span><span>🎩 Teknik direktörler</span><span>🏆 Global rating</span><span>👤 Solo oyun</span><span>👥 1–8 oyuncu</span></div>
       </div>
     </section>
 
     <section id="lobbyScreen" class="screen">
-      <div class="lobby glass">
-        <div class="section-head"><div><div class="eyebrow">MATCH LOBBY</div><h1>Maç Odası</h1><p>Oyuncular hazır olduğunda kurucu maçı başlatır.</p></div><div class="room-box"><span>ODA KODU</span><b id="roomCodeText">------</b><button id="copyRoomBtn" class="tiny-btn">Davet Linkini Kopyala</button></div></div>
-        <div class="lobby-layout">
-          <div class="roster-panel"><div class="panel-label"><span>OYUNCULAR</span><small>2–4 kişi</small></div><div id="lobbyPlayers" class="player-list"></div></div>
-          <div class="settings-card">
-            <div class="panel-label"><span>MAÇ AYARLARI</span><small>Kurucu kontrolü</small></div>
-            <label for="roundCountSelect">Kart sayısı</label><select id="roundCountSelect" hidden><option value="25">25 — Hızlı Maç</option><option value="50">50 — Uzun Maç</option><option value="100" selected>100 — Tam Gece</option></select>
-            <label for="choiceCountSelect">Seçenek sayısı</label><select id="choiceCountSelect" hidden><option value="4">4 — Hızlı</option><option value="6" selected>6 — Dengeli</option><option value="8">8 — Zor</option></select>
-            <div id="formatPreview" class="format-preview">100 kart • 6 seçenek • süre yok</div>
-            <p class="settings-note">Her oyuncunun kart başına tek seçim hakkı vardır. İlk doğru seçim puanı alır. Herkes yanlış seçerse kart otomatik kapanır.</p>
-            <button id="startGameBtn" class="primary-btn" disabled>Maçı Başlat <span>→</span></button><div id="hostHint" class="hint"></div>
+      <div class="lobby glass v5-lobby">
+        <div class="section-head"><div><div class="eyebrow">MATCH LOBBY</div><h1 id="lobbyModeTitle">Maç Odası</h1><p id="lobbyModeDesc">Oyuncular hazır olduğunda maçı başlat.</p></div><div class="room-box"><span>ODA KODU</span><b id="roomCodeText">------</b><div class="room-actions"><button id="copyRoomBtn" class="tiny-btn">Davet Linki</button><button id="qrRoomBtn" class="tiny-btn">QR</button></div></div></div>
+        <div class="lobby-layout v5-lobby-layout">
+          <div class="roster-panel"><div class="panel-label"><span>OYUNCULAR</span><small id="lobbyCapacity">1 / 8</small></div><div id="lobbyPlayers" class="player-list"></div><button id="readyBtn" class="ghost-btn ready-btn">Hazırım</button><div id="spectatorInfo" class="spectator-info"></div></div>
+          <div class="settings-card v5-settings">
+            <div class="panel-label"><span>MAÇ AYARLARI</span><small id="hostControlText">Kurucu kontrolü</small></div>
+            <label for="modeSelect">Oyun modu</label><select id="modeSelect"></select>
+            <div class="settings-two"><div><label for="choiceCountSelect">Seçenek</label><select id="choiceCountSelect"><option value="4">4</option><option value="6" selected>6</option><option value="8">8</option></select></div><div><label for="maxPlayersSelect">Maks. oyuncu</label><select id="maxPlayersSelect"><option>2</option><option>4</option><option selected>8</option></select></div></div>
+            <label for="contentSelect">İçerik</label><select id="contentSelect"><option value="player">Futbolcular</option><option value="manager">Teknik Direktörler</option><option value="mixed">Karma</option></select>
+            <div id="formatPreview" class="format-preview">25 kart • 6 seçenek • süre yok</div>
+            <div id="teamTools" class="team-tools hidden"><span>Takım modu aktif. Oyuncular otomatik Mavi / Altın takıma bölünür.</span></div>
+            <button id="startGameBtn" class="primary-btn">Maçı Başlat <span>→</span></button><div id="hostHint" class="hint"></div>
           </div>
+          <aside class="lobby-rules"><div class="panel-label"><span>MOD KURALLARI</span></div><div id="modeRules"></div><div class="connection-card"><i id="connectionDot"></i><span><b id="connectionText">Bağlantı hazırlanıyor</b><small id="pingText">Ping ölçülüyor</small></span></div></aside>
         </div>
       </div>
     </section>
 
     <section id="gameScreen" class="screen">
-      <div class="game-layout">
-        <aside class="score-panel glass"><div class="score-title"><span>CANLI SIRALAMA</span><b id="roundProgress">1 / 100</b></div><div id="scorePlayers" class="score-list"></div><div class="progress-track"><div id="progressBar" class="progress-bar"></div></div><div id="finalStageChip" class="final-chip">✦ FİNAL GECESİ</div></aside>
-        <section class="quiz-panel glass">
-          <div class="quiz-topline"><div id="roundStatus" class="round-status">İki takımda da oynamış futbolcuyu seç</div><div id="gameModeChip" class="mode-chip">6 SEÇENEK</div></div>
-          <div class="clubs-row"><article class="club-card"><div id="teamALogo" class="team-logo image-shell"><span>?</span></div><h2 id="teamAName">Takım A</h2></article><div class="versus"><span>VS</span><i></i><small>ORTAK OYUNCU</small></div><article class="club-card"><div id="teamBLogo" class="team-logo image-shell"><span>?</span></div><h2 id="teamBName">Takım B</h2></article></div>
-          <div id="answerGrid" class="answer-grid" data-count="6"></div><div id="resultFlash" class="result-flash" aria-live="polite"></div><div class="keyboard-hint">Masaüstünde cevaplamak için 1–8 tuşlarını kullanabilirsin.</div>
+      <div class="game-hud glass">
+        <div class="hud-mode"><span id="gameModeIcon">⚽</span><span><b id="gameModeName">Klasik 25</b><small id="gameContentType">FUTBOLCU BAĞLANTISI</small></span></div>
+        <div class="match-clock" id="matchClock"><small>KALAN SÜRE</small><b id="timerText">∞</b><div class="timer-track"><i id="timerBar"></i></div></div>
+        <div class="hud-round"><small>TUR</small><b id="roundProgress">1 / 25</b></div>
+      </div>
+      <div class="game-layout v5-game-layout">
+        <aside class="score-panel glass"><div class="score-title"><span>CANLI SIRALAMA</span><b id="teamScoreText"></b></div><div id="scorePlayers" class="score-list"></div><div class="progress-track"><div id="progressBar" class="progress-bar"></div></div><div id="finalStageChip" class="final-chip">✦ SON BÖLÜM</div></aside>
+        <section class="quiz-panel glass v5-quiz">
+          <div class="quiz-topline"><div id="roundStatus" class="round-status">İki takımda da bulunmuş kişiyi seç</div><div class="quiz-chips"><span id="questionTypeChip" class="mode-chip">FUTBOLCU</span><span id="gameOptionChip" class="mode-chip">6 SEÇENEK</span></div></div>
+          <div class="clubs-row"><article class="club-card"><div id="teamALogo" class="team-logo image-shell"><span>?</span></div><h2 id="teamAName">Takım A</h2></article><div class="versus"><span>VS</span><i></i><small id="relationLabel">ORTAK OYUNCU</small></div><article class="club-card"><div id="teamBLogo" class="team-logo image-shell"><span>?</span></div><h2 id="teamBName">Takım B</h2></article></div>
+          <div id="answerGrid" class="answer-grid" data-count="6"></div><div id="resultFlash" class="result-flash" aria-live="polite"></div><div class="keyboard-hint">1–8 tuşlarıyla hızlı cevap • İlk doğru competitive modlarda turu kilitler.</div>
         </section>
-        <aside class="activity-panel glass"><div class="activity-head"><span>OYUNCU SEÇİMLERİ</span><small>● CANLI</small></div><div id="selectionFeed" class="selection-feed"></div></aside>
+        <aside class="activity-panel glass"><div class="activity-head"><span>CANLI AKIŞ</span><small>● LIVE</small></div><div id="selectionFeed" class="selection-feed"></div><div id="personalStats" class="personal-stats"></div></aside>
       </div>
     </section>
 
-    <section id="finalScreen" class="screen"><div class="final-card glass"><div class="trophy">✦</div><div class="eyebrow">MAÇ TAMAMLANDI</div><h1 id="winnerTitle">Gecenin Şampiyonu</h1><p id="winnerSubtitle"></p><div id="finalScores" class="final-scores"></div><button id="playAgainBtn" class="primary-btn">Rövanş Başlat</button><button id="backHomeBtn" class="ghost-btn">Ana Sayfaya Dön</button></div></section>
+    <section id="finalScreen" class="screen"><div class="final-card glass v5-final"><div class="trophy">✦</div><div class="eyebrow">MAÇ TAMAMLANDI</div><h1 id="winnerTitle">Maç Sonucu</h1><p id="winnerSubtitle"></p><div id="ratingResult" class="rating-result"></div><div id="finalScores" class="final-scores"></div><div id="matchAwards" class="match-awards"></div><div class="final-actions"><button id="playAgainBtn" class="primary-btn">Rövanş</button><button id="leaderboardFinalBtn" class="secondary-btn">Global Sıralama</button><button id="backHomeBtn" class="ghost-btn">Ana Sayfa</button></div></div></section>
   </main>
+
   <div id="toast" class="toast" role="status"></div>
+  <div id="modalBackdrop" class="modal-backdrop hidden">
+    <section id="leaderboardModal" class="v5-modal hidden"><button class="modal-close" data-close-modal>×</button><div class="eyebrow">SEASON 1</div><h2>Global Skor Tablosu</h2><div class="leader-tabs"><button class="active" data-board="rating">Rating</button><button data-board="wins">Galibiyet</button><button data-board="xp">XP</button></div><div id="leaderboardList" class="leaderboard-list"></div><small id="leaderboardStatus"></small></section>
+    <section id="profileModal" class="v5-modal hidden"><button class="modal-close" data-close-modal>×</button><div class="eyebrow">OYUNCU PROFİLİ</div><h2 id="profileModalName">Oyuncu</h2><div id="profileStatsGrid" class="profile-stats-grid"></div><div id="badgeGrid" class="badge-grid"></div><h3>Son Maçlar</h3><div id="matchHistoryList" class="history-list"></div></section>
+    <section id="qrModal" class="v5-modal qr-modal hidden"><button class="modal-close" data-close-modal>×</button><h2>Odaya Katıl</h2><div id="qrCanvas" class="qr-canvas"></div><b id="qrCodeText">------</b><small>QR yerine oda kodunu da paylaşabilirsin.</small></section>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
-  <script src="data.js?v=420"></script>
-  <script src="images-v4.js?v=420"></script>
-  <script src="preflight-v4.js?v=420"></script>
-  <script src="app.js?v=420"></script>
-  <script src="enhancer-v4.js?v=420"></script>
+  <script src="data.js?v=500"></script>
+  <script src="images-v4.js?v=500"></script>
+  <script src="data-v5.js?v=500"></script>
+  <script src="manager-images-v5.js?v=500"></script>
+  <script src="cloud-v5.js?v=500"></script>
+  <script src="app-v5.js?v=500"></script>
 </body>
 </html>
