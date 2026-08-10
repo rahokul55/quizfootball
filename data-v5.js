@@ -1,0 +1,53 @@
+(()=>{"use strict";
+const managers={
+ mourinho:{id:"mourinho",name:"José Mourinho",clubs:["POR","CHE","INT","RMA","MUN","TOT","ROM"],search:"José Mourinho football manager"},
+ ancelotti:{id:"ancelotti",name:"Carlo Ancelotti",clubs:["ACM","CHE","PSG","RMA","BAY","EVE"],search:"Carlo Ancelotti football manager"},
+ guardiola:{id:"guardiola",name:"Pep Guardiola",clubs:["BAR","BAY","MCI"],search:"Pep Guardiola football manager"},
+ klopp:{id:"klopp",name:"Jürgen Klopp",clubs:["BVB","LIV"],search:"Jürgen Klopp football manager"},
+ tuchel:{id:"tuchel",name:"Thomas Tuchel",clubs:["BVB","PSG","CHE","BAY"],search:"Thomas Tuchel football manager"},
+ conte:{id:"conte",name:"Antonio Conte",clubs:["JUV","CHE","INT","TOT"],search:"Antonio Conte football manager"},
+ allegri:{id:"allegri",name:"Massimiliano Allegri",clubs:["ACM","JUV"],search:"Massimiliano Allegri football manager"},
+ benitez:{id:"benitez",name:"Rafael Benítez",clubs:["VAL","LIV","INT","CHE","RMA","EVE"],search:"Rafael Benitez football manager"},
+ emery:{id:"emery",name:"Unai Emery",clubs:["VAL","SEV","PSG","ARS"],search:"Unai Emery football manager"},
+ pochettino:{id:"pochettino",name:"Mauricio Pochettino",clubs:["SOU","TOT","PSG","CHE"],search:"Mauricio Pochettino football manager"},
+ vangaal:{id:"vangaal",name:"Louis van Gaal",clubs:["AJA","BAR","BAY","MUN"],search:"Louis van Gaal football manager"},
+ mancini:{id:"mancini",name:"Roberto Mancini",clubs:["INT","MCI"],search:"Roberto Mancini football manager"},
+ spalletti:{id:"spalletti",name:"Luciano Spalletti",clubs:["ROM","INT"],search:"Luciano Spalletti football manager"},
+ ranieri:{id:"ranieri",name:"Claudio Ranieri",clubs:["CHE","JUV","ROM","INT"],search:"Claudio Ranieri football manager"},
+ sarri:{id:"sarri",name:"Maurizio Sarri",clubs:["CHE","JUV"],search:"Maurizio Sarri football manager"},
+ luisenrique:{id:"luisenrique",name:"Luis Enrique",clubs:["ROM","BAR","PSG"],search:"Luis Enrique football manager"},
+ moyes:{id:"moyes",name:"David Moyes",clubs:["EVE","MUN"],search:"David Moyes football manager"},
+ lopetegui:{id:"lopetegui",name:"Julen Lopetegui",clubs:["POR","RMA","SEV"],search:"Julen Lopetegui football manager"},
+ nuno:{id:"nuno",name:"Nuno Espírito Santo",clubs:["POR","TOT"],search:"Nuno Espirito Santo football manager"},
+ avb:{id:"avb",name:"André Villas-Boas",clubs:["POR","CHE","TOT"],search:"Andre Villas-Boas football manager"},
+ capello:{id:"capello",name:"Fabio Capello",clubs:["ACM","RMA","ROM","JUV"],search:"Fabio Capello football manager"},
+ lippi:{id:"lippi",name:"Marcello Lippi",clubs:["JUV","INT"],search:"Marcello Lippi football manager"},
+ trapattoni:{id:"trapattoni",name:"Giovanni Trapattoni",clubs:["ACM","JUV","INT","BAY"],search:"Giovanni Trapattoni football manager"},
+ heynckes:{id:"heynckes",name:"Jupp Heynckes",clubs:["RMA","BAY"],search:"Jupp Heynckes football manager"},
+ deboer:{id:"deboer",name:"Frank de Boer",clubs:["AJA","INT"],search:"Frank de Boer football manager"},
+ koeman:{id:"koeman",name:"Ronald Koeman",clubs:["AJA","BEN","VAL","EVE","BAR"],search:"Ronald Koeman football manager"},
+ hiddink:{id:"hiddink",name:"Guus Hiddink",clubs:["VAL","RMA","CHE"],search:"Guus Hiddink football manager"},
+ pellegrini:{id:"pellegrini",name:"Manuel Pellegrini",clubs:["RMA","MCI"],search:"Manuel Pellegrini football manager"},
+ tenhag:{id:"tenhag",name:"Erik ten Hag",clubs:["AJA","MUN"],search:"Erik ten Hag football manager"},
+ flick:{id:"flick",name:"Hansi Flick",clubs:["BAY","BAR"],search:"Hansi Flick football manager"}
+};
+const modes={
+ classic25:{id:"classic25",group:"competitive",name:"Klasik 25",icon:"⚽",desc:"25 kartlık saf ilk-bilen maçı.",roundCount:25,optionCount:6,timeLimit:0,content:"player",rule:"first",rated:false},
+ classic50:{id:"classic50",group:"competitive",name:"Klasik 50",icon:"🏟",desc:"Uzun rekabet, 50 benzersiz kart.",roundCount:50,optionCount:6,timeLimit:0,content:"player",rule:"first",rated:false},
+ ranked3:{id:"ranked3",group:"competitive",name:"Ranked 3 Dakika",icon:"🏆",desc:"3 dakikada en çok doğru. Global rating etkilenir.",roundCount:100,optionCount:6,timeLimit:180,content:"mixed",rule:"first",rated:true},
+ blitz3:{id:"blitz3",group:"competitive",name:"Blitz 3",icon:"⚡",desc:"4 seçenek, 3 dakika, çok hızlı akış.",roundCount:100,optionCount:4,timeLimit:180,content:"player",rule:"first",rated:false},
+ expert5:{id:"expert5",group:"competitive",name:"Expert 5",icon:"🧠",desc:"8 seçenekli 5 dakikalık zor mod.",roundCount:100,optionCount:8,timeLimit:300,content:"mixed",rule:"first",rated:true},
+ managers4:{id:"managers4",group:"competitive",name:"Teknik Direktör Kupası",icon:"🎩",desc:"4 dakika boyunca iki kulübü çalıştırmış teknik direktörü bul.",roundCount:100,optionCount:6,timeLimit:240,content:"manager",rule:"first",rated:false},
+ mixed5:{id:"mixed5",group:"competitive",name:"Football Masters",icon:"👑",desc:"Futbolcu ve teknik direktör soruları karışık.",roundCount:100,optionCount:6,timeLimit:300,content:"mixed",rule:"first",rated:true},
+ sudden:{id:"sudden",group:"competitive",name:"Sudden Death",icon:"☠",desc:"Yanlış cevap elenme riski. Son kalan kazanır.",roundCount:50,optionCount:6,timeLimit:0,content:"player",rule:"survival",rated:true},
+ teams5:{id:"teams5",group:"competitive",name:"Takım Savaşı",icon:"🆚",desc:"2v2 / 3v3 takım puanı. 5 dakikalık mücadele.",roundCount:100,optionCount:6,timeLimit:300,content:"mixed",rule:"team",rated:false},
+ chill5:{id:"chill5",group:"chill",name:"Chill 5",icon:"🌙",desc:"Rating yok, ceza yok; 5 dakika rahat oyun.",roundCount:100,optionCount:6,timeLimit:300,content:"player",rule:"first",rated:false,chill:true},
+ coop5:{id:"coop5",group:"chill",name:"Co-op 5",icon:"🤝",desc:"Herkes aynı takım. Ortak skor hedefini aşın.",roundCount:100,optionCount:6,timeLimit:300,content:"mixed",rule:"coop",rated:false,chill:true},
+ zen10:{id:"zen10",group:"chill",name:"Zen 10",icon:"☁",desc:"10 dakika düşük baskı, rahat tempo ve karma içerik.",roundCount:100,optionCount:4,timeLimit:600,content:"mixed",rule:"first",rated:false,chill:true},
+ endless:{id:"endless",group:"chill",name:"Sonsuz Gece",icon:"∞",desc:"Süre yok; 100 kart boyunca rahatça devam et.",roundCount:100,optionCount:6,timeLimit:0,content:"mixed",rule:"first",rated:false,chill:true},
+ solo:{id:"solo",group:"solo",name:"Solo Antrenman",icon:"🎯",desc:"Tek başına kendini dene; anında yeni soru.",roundCount:100,optionCount:6,timeLimit:0,content:"mixed",rule:"solo",rated:false,solo:true},
+ solo3:{id:"solo3",group:"solo",name:"Solo Speed 3",icon:"⏱",desc:"3 dakikada kişisel rekorunu kır.",roundCount:100,optionCount:6,timeLimit:180,content:"mixed",rule:"solo",rated:false,solo:true},
+ managerSolo:{id:"managerSolo",group:"solo",name:"Hoca Antrenmanı",icon:"📋",desc:"Yalnız teknik direktör bağlantılarıyla çalış.",roundCount:100,optionCount:6,timeLimit:300,content:"manager",rule:"solo",rated:false,solo:true}
+};
+window.QF_V5={managers,modes,season:"S1",appId:"6a7a33fd2bae90444c321e7e",version:"5.0.0"};
+})();
