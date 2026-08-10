@@ -20,7 +20,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -56,9 +56,21 @@ jobs:
           timeout 10s node --check enhancer-v4.js
           timeout 10s node --check game-core-v4.js
           timeout 10s node --check sw-v4.js
+          timeout 10s node --check tests/e2e-v4.mjs
 
       - name: Game data and rules QA
         run: timeout 25s node tests/validate-v4.mjs
+
+      - name: Install browser QA runtime
+        run: npm install --no-save --no-package-lock playwright-core@1.55.0
+
+      - name: Two-client browser gameplay QA
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/quizfootball-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+          timeout 90s node tests/e2e-v4.mjs
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
