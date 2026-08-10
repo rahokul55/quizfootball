@@ -1,0 +1,1 @@
+(()=>{"use strict";const V=window.QF_V5;if(!V)return;V.modes.custom={id:"custom",group:"competitive",name:"Özel Maç Laboratuvarı",icon:"🧪",desc:"Bitiş koşulu, içerik, seçenek, puanlama ve takım kuralını kendin birleştir.",roundCount:25,optionCount:6,timeLimit:0,content:"mixed",rule:"first",rated:false,targetScore:0,scoring:"normal",custom:true};V.version="5.5.0";})();
