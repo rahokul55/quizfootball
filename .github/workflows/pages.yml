@@ -1,4 +1,4 @@
-name: Build Test and Deploy Quiz Football V5
+name: Build and Test Quiz Football V5
 
 on:
   push:
@@ -7,18 +7,13 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
-  group: "pages-v5"
+  group: "quizfootball-v5-qa"
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  test:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -76,14 +71,11 @@ jobs:
           sleep 1
           timeout 120s node tests/e2e-v5.mjs
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload site artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: "."
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Verify production files
+        run: |
+          test -s index.html
+          test -s app-v5.js
+          test -s data-v5.js
+          test -s images-v4.js
+          test -s manager-images-v5.js
+          echo "V5 production bundle verified. GitHub Pages branch deployment publishes main automatically."
