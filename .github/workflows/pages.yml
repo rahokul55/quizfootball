@@ -33,6 +33,9 @@ jobs:
       - name: Apply V5 multiplayer resilience patches
         run: timeout 15s node scripts/patch-multiplayer-v5.mjs
 
+      - name: Wire V5 UI and offline extras
+        run: timeout 15s node scripts/patch-ui-extras-v5.mjs
+
       - name: Resolve player and team images
         run: timeout 180s node scripts/build-images-v4.mjs
 
@@ -46,7 +49,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html app-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
           if ! git diff --cached --quiet; then
-            git commit -m "Refresh V5 runtime, multiplayer resilience and football imagery"
+            git commit -m "Refresh V5 runtime, multiplayer resilience and production wiring"
             git push
           fi
 
@@ -54,11 +57,14 @@ jobs:
         run: |
           timeout 10s node --check app-v5.js
           timeout 10s node --check cloud-v5.js
+          timeout 10s node --check extras-v5.js
+          timeout 10s node --check sw-v5.js
           timeout 10s node --check data-v5.js
           timeout 10s node --check data-v5-plus.js
           timeout 10s node --check data-v5-arcade.js
           timeout 10s node --check scripts/patch-v5.mjs
           timeout 10s node --check scripts/patch-multiplayer-v5.mjs
+          timeout 10s node --check scripts/patch-ui-extras-v5.mjs
           timeout 10s node --check scripts/build-manager-images-v5.mjs
           timeout 10s node --check tests/validate-v5.mjs
           timeout 10s node --check tests/validate-v5-advanced.mjs
@@ -107,9 +113,12 @@ jobs:
           test -s data-v5-plus.js
           test -s data-v5-arcade.js
           test -s cloud-v5.js
+          test -s extras-v5.js
+          test -s sw-v5.js
           test -s images-v4.js
           test -s manager-images-v5.js
           grep -q 'data-v5-plus.js' index.html
           grep -q 'data-v5-arcade.js' index.html
+          grep -q 'extras-v5.js' index.html
           grep -q 'function promoteToHost' app-v5.js
           echo "V5 production bundle verified. GitHub Pages branch deployment publishes main automatically."
