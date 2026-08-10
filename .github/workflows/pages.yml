@@ -53,13 +53,18 @@ jobs:
           timeout 10s node --check cloud-v5.js
           timeout 10s node --check data-v5.js
           timeout 10s node --check data-v5-plus.js
+          timeout 10s node --check data-v5-arcade.js
           timeout 10s node --check scripts/patch-v5.mjs
           timeout 10s node --check scripts/build-manager-images-v5.mjs
           timeout 10s node --check tests/validate-v5.mjs
+          timeout 10s node --check tests/validate-v5-advanced.mjs
           timeout 10s node --check tests/e2e-v5.mjs
 
-      - name: V5 data modes and rules QA
+      - name: V5 base data modes and rules QA
         run: timeout 30s node tests/validate-v5.mjs
+
+      - name: V5 advanced modes QA
+        run: timeout 30s node tests/validate-v5-advanced.mjs
 
       - name: Install browser QA runtime
         run: npm install --no-save --no-package-lock playwright-core@1.55.0
@@ -78,8 +83,10 @@ jobs:
           test -s app-v5.js
           test -s data-v5.js
           test -s data-v5-plus.js
+          test -s data-v5-arcade.js
           test -s cloud-v5.js
           test -s images-v4.js
           test -s manager-images-v5.js
           grep -q 'data-v5-plus.js' index.html
+          grep -q 'data-v5-arcade.js' index.html
           echo "V5 production bundle verified. GitHub Pages branch deployment publishes main automatically."
