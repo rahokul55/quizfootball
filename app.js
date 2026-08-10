@@ -21,7 +21,7 @@ function code(x){return String(x||"").toUpperCase().replace(/[^A-Z0-9]/g,"").sli
 function mkcode(){const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",v=new Uint32Array(6);crypto.getRandomValues(v);return[...v].map(n=>a[n%a.length]).join("")}
 function hostId(c){return"quizfootball-"+c.toLowerCase()}
 function initials(x){return String(x||"?").split(/\s+/).slice(0,2).map(v=>v[0]||"").join("").toUpperCase()}
-function shuf(a,r=Math.random){a=[...a];for(let i=a.length-1;i;i--){let j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function shuf(a,r=Math.random){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function rng(str){let h=2166136261;for(let c of str){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return()=>{h+=0x6D2B79F5;let r=h;r=Math.imul(r^r>>>15,r|1);r^=r+Math.imul(r^r>>>7,r|61);return((r^r>>>14)>>>0)/4294967296}}
 function active(){return Object.values(S.players).filter(p=>p.active!==false)}
 function card(id){return D.cards.find(c=>c.id===id)}
@@ -119,8 +119,8 @@ function ensureAudio(){if(!sound)return null;if(!audio)audio=new(window.AudioCon
 function tone(f,d,v=.06,delay=0){let a=ensureAudio();if(!a)return;let o=a.createOscillator(),g=a.createGain(),t=a.currentTime+delay;o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.02)}
 function okSound(){tone(523,.14,.07);tone(659,.18,.06,.05);tone(784,.21,.05,.1)}
 function revealSound(){tone(294,.16,.045);tone(349,.2,.045,.07)}
-function startAnthem(force=false){if(!sound||anthem||(!force&&S.status!=="playing"))return;ensureAudio();let ch=[[131,196,262],[104,156,208],[117,175,233],[98,147,196]],i=0;const play=()=>{ch[i++%4].forEach((f,j)=>tone(f,3.5,j?0.018:0.035,j*.02))};play();anthem=setInterval(play,3700)}
-function stopAnthem(){if(anthem)clearInterval(anthem);anthem=null}
+function startAnthem(force=false){if(window.QFV4Music?.start)window.QFV4Music.start()}
+function stopAnthem(){if(window.QFV4Music?.stop)window.QFV4Music.stop();if(anthem)clearInterval(anthem);anthem=null}
 U.createRoomBtn.onclick=()=>{let n=name(U.createName.value);if(!n)return toast("Kullanıcı adını yaz");ensureAudio();hostRoom(n)};
 U.joinRoomBtn.onclick=()=>{let n=name(U.joinName.value),c=code(U.joinCode.value);if(!n)return toast("Kullanıcı adını yaz");if(c.length<5)return toast("Oda kodunu yaz");ensureAudio();join(n,c)};
 U.joinCode.oninput=e=>e.target.value=code(e.target.value);
