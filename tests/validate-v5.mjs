@@ -1,0 +1,12 @@
+import fs from 'node:fs';import vm from 'node:vm';
+function load(path,key){const s={window:{}};vm.createContext(s);vm.runInContext(fs.readFileSync(path,'utf8'),s);return s.window[key]}
+const D=load('data.js','QF_DATA'),V=load('data-v5.js','QF_V5');let n=0;const ok=(c,m)=>{if(!c)throw new Error(m);n++};
+ok(Object.keys(D.teams).length===24,`expected 24 teams, got ${Object.keys(D.teams).length}`);ok(D.cards.length>=100,'need at least 100 player cards');ok(Object.keys(D.players).length>=100,'need at least 100 players');
+ok(Object.keys(V.modes).length>=16,`expected >=16 modes, got ${Object.keys(V.modes).length}`);ok(Object.keys(V.managers).length>=30,`expected >=30 managers, got ${Object.keys(V.managers).length}`);
+for(const [id,m] of Object.entries(V.modes)){ok(m.id===id,`mode id mismatch ${id}`);ok(['competitive','chill','solo'].includes(m.group),`bad mode group ${id}`);ok([4,6,8].includes(m.optionCount),`bad option count ${id}`);ok(['player','manager','mixed'].includes(m.content),`bad content ${id}`);ok(['first','survival','team','coop','solo'].includes(m.rule),`bad rule ${id}`);ok(m.timeLimit===0||m.timeLimit>=120,`timed mode too short ${id}`)}
+for(const [id,m] of Object.entries(V.managers)){ok(m.id===id,`manager id mismatch ${id}`);ok(m.clubs.length>=2,`manager needs >=2 clubs ${id}`);for(const c of m.clubs)ok(!!D.teams[c],`${id}: unknown club ${c}`)}
+const pairs=new Set();for(const m of Object.values(V.managers)){for(let i=0;i<m.clubs.length;i++)for(let j=i+1;j<m.clubs.length;j++){const p=[m.clubs[i],m.clubs[j]].sort().join('|');pairs.add(p)}}ok(pairs.size>=35,`not enough manager club pairs ${pairs.size}`);
+const html=fs.readFileSync('index.html','utf8');for(const x of ['profileNameInput','leaderboardBtn','soloStartBtn','modeGrid','timerText','modeSelect','contentSelect'])ok(html.includes(`id="${x}"`),`missing UI ${x}`);ok(html.includes('app-v5.js'),'V5 engine not loaded');ok(html.includes('cloud-v5.js'),'cloud client not loaded');
+for(const f of ['app-v5.js','cloud-v5.js','v5.css','manager-images-v5.js'])ok(fs.existsSync(f),`missing ${f}`);
+const app=fs.readFileSync('app-v5.js','utf8');for(const s of ['startSolo','startMatch','finishMatch','ratingDelta','buildManagerCards','attemptReconnect','showLeaderboard','recordMyResult'])ok(app.includes(s),`missing engine feature ${s}`);
+console.log(`V5 QA PASS: ${n} assertions, ${Object.keys(V.modes).length} modes, ${Object.keys(V.managers).length} managers, ${pairs.size} manager club pairs.`);
