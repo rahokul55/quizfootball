@@ -1,4 +1,4 @@
-name: Build and Deploy Quiz Football V4
+name: Build Test and Deploy Quiz Football V5
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages-v4"
+  group: "pages-v5"
   cancel-in-progress: true
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -32,45 +32,49 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Patch live game core
-        run: timeout 15s node scripts/patch-app-v4.mjs
+      - name: Apply V5 runtime safety patches
+        run: timeout 15s node scripts/patch-v5.mjs
 
-      - name: Resolve real football images
+      - name: Resolve player and team images
         run: timeout 180s node scripts/build-images-v4.mjs
 
-      - name: Persist generated fixes
+      - name: Resolve manager images
+        run: timeout 180s node scripts/build-manager-images-v5.mjs
+
+      - name: Persist generated V5 assets
         if: github.actor != 'github-actions[bot]'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app.js images-v4.js image-report.json enhancements-v4.css
+          git add app-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
           if ! git diff --cached --quiet; then
-            git commit -m "Refresh live core, images and visual fixes"
+            git commit -m "Refresh V5 runtime and football imagery"
             git push
           fi
 
       - name: Syntax validation
         run: |
-          timeout 10s node --check app.js
-          timeout 10s node --check preflight-v4.js
-          timeout 10s node --check enhancer-v4.js
-          timeout 10s node --check game-core-v4.js
-          timeout 10s node --check sw-v4.js
-          timeout 10s node --check tests/e2e-v4.mjs
+          timeout 10s node --check app-v5.js
+          timeout 10s node --check cloud-v5.js
+          timeout 10s node --check data-v5.js
+          timeout 10s node --check scripts/patch-v5.mjs
+          timeout 10s node --check scripts/build-manager-images-v5.mjs
+          timeout 10s node --check tests/validate-v5.mjs
+          timeout 10s node --check tests/e2e-v5.mjs
 
-      - name: Game data and rules QA
-        run: timeout 25s node tests/validate-v4.mjs
+      - name: V5 data modes and rules QA
+        run: timeout 30s node tests/validate-v5.mjs
 
       - name: Install browser QA runtime
         run: npm install --no-save --no-package-lock playwright-core@1.55.0
 
-      - name: Two-client browser gameplay QA
+      - name: V5 two-client solo timed and cloud browser QA
         run: |
           python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/quizfootball-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID || true' EXIT
           sleep 1
-          timeout 90s node tests/e2e-v4.mjs
+          timeout 120s node tests/e2e-v5.mjs
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
