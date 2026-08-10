@@ -59,6 +59,7 @@ jobs:
           timeout 10s node --check tests/validate-v5.mjs
           timeout 10s node --check tests/validate-v5-advanced.mjs
           timeout 10s node --check tests/e2e-v5.mjs
+          timeout 10s node --check tests/e2e-v5-advanced.mjs
 
       - name: V5 base data modes and rules QA
         run: timeout 30s node tests/validate-v5.mjs
@@ -76,6 +77,14 @@ jobs:
           trap 'kill $SERVER_PID || true' EXIT
           sleep 1
           timeout 120s node tests/e2e-v5.mjs
+
+      - name: V5 daily race combo and league browser QA
+        run: |
+          python3 -m http.server 4174 --bind 127.0.0.1 >/tmp/quizfootball-http-adv.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+          QF_TEST_BASE=http://127.0.0.1:4174/ timeout 120s node tests/e2e-v5-advanced.mjs
 
       - name: Verify production files
         run: |
