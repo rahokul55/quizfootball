@@ -126,3 +126,10 @@ body.v13-runtime .v7-budget-item b{font-size:15px!important}body.v13-runtime .v7
 /* V13_2_MATCH_OVERLAY_GUARD */
 body.v13-match-active #v9Office,body.v13-match-active .v9-office{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}
 body.v13-match-active #v13MatchCanvas3D{display:block!important;visibility:visible!important;opacity:1!important}
+
+/* V13_2_2_LAYOUT_REALISM */
+#v7-match .v7-match>div:first-child{display:grid!important;grid-template-rows:auto minmax(0,1fr) auto auto!important;height:100%!important;min-height:0!important}
+#v7-match .v7-match-canvas{height:100%!important;min-height:0!important;max-height:none!important}
+#v7-match .v7-match-side{display:flex!important;flex-direction:column!important;gap:8px!important;min-height:0!important}
+#v7-match .v7-match-side>.v7-card{flex:1 1 auto!important;min-height:0!important}
+@media(min-width:1600px){#v7-match .v7-match{grid-template-columns:minmax(0,1.9fr) minmax(390px,.62fr)!important}#v7-match .v7-qclub img{width:58px!important;height:58px!important}#v7-match .v7-qclub b{font-size:15px!important}#v7-match .v7-qopt{font-size:15px!important;min-height:40px!important}#v7-match .v7-eventlog{font-size:13px!important;max-height:190px!important}#v7-match .v7-metric b{font-size:20px!important}#v7-match .v7-metric span{font-size:11px!important}}
