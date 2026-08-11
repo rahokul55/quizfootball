@@ -1,4 +1,4 @@
-name: Build and Test Quiz Football V5
+name: Build and Test Quiz Football V6
 
 on:
   push:
@@ -9,13 +9,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: "quizfootball-v5-qa"
+  group: "quizfootball-v6-qa"
   cancel-in-progress: true
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -55,7 +55,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html app-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
           if ! git diff --cached --quiet; then
-            git commit -m "Refresh V5 runtime, custom matches, multiplayer, social layer and wiring"
+            git commit -m "Refresh shared V5 runtime assets for V6"
             git push
           fi
 
@@ -69,6 +69,8 @@ jobs:
           timeout 10s node --check data-v5-plus.js
           timeout 10s node --check data-v5-arcade.js
           timeout 10s node --check data-v5-custom.js
+          timeout 10s node --check data-v6.js
+          timeout 10s node --check club-v6.js
           timeout 10s node --check scripts/patch-v5.mjs
           timeout 10s node --check scripts/patch-custom-v5.mjs
           timeout 10s node --check scripts/patch-multiplayer-v5.mjs
@@ -83,6 +85,7 @@ jobs:
           timeout 10s node --check tests/e2e-v5-migration.mjs
           timeout 10s node --check tests/e2e-v5-social.mjs
           timeout 10s node --check tests/e2e-v5-custom.mjs
+          timeout 10s node --check tests/e2e-v6.mjs
 
       - name: V5 base data modes and rules QA
         run: timeout 30s node tests/validate-v5.mjs
@@ -136,6 +139,14 @@ jobs:
           sleep 1
           QF_TEST_BASE=http://127.0.0.1:4177/ timeout 120s node tests/e2e-v5-custom.mjs
 
+      - name: V6 performance club and live match browser QA
+        run: |
+          python3 -m http.server 4178 --bind 127.0.0.1 >/tmp/quizfootball-http-v6.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+          QF_TEST_BASE=http://127.0.0.1:4178/ timeout 120s node tests/e2e-v6.mjs
+
       - name: Verify production files
         run: |
           test -s index.html
@@ -144,6 +155,9 @@ jobs:
           test -s data-v5-plus.js
           test -s data-v5-arcade.js
           test -s data-v5-custom.js
+          test -s data-v6.js
+          test -s club-v6.js
+          test -s v6.css
           test -s cloud-v5.js
           test -s extras-v5.js
           test -s sw-v5.js
@@ -151,13 +165,12 @@ jobs:
           test -s custom-v5.css
           test -s images-v4.js
           test -s manager-images-v5.js
-          grep -q 'data-v5-plus.js' index.html
-          grep -q 'data-v5-arcade.js' index.html
-          grep -q 'data-v5-custom.js' index.html
-          grep -q 'extras-v5.js' index.html
-          grep -q 'social-v5.css' index.html
-          grep -q 'custom-v5.css' index.html
+          grep -q 'data-v6.js' index.html
+          grep -q 'club-v6.js' index.html
+          grep -q 'v6.css' index.html
           grep -q 'function promoteToHost' app-v5.js
           grep -q 'function sendReaction' app-v5.js
-          grep -q 'function installCustomControls' app-v5.js
-          echo "V5 production bundle verified. GitHub Pages branch deployment publishes main automatically."
+          grep -q 'function startMatch' club-v6.js
+          grep -q 'function answerQuestion' club-v6.js
+          grep -q 'quizfootball-v6.0.0' sw-v5.js
+          echo "V6 production bundle verified. GitHub Pages branch deployment publishes main automatically."
