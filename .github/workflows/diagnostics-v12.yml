@@ -1,0 +1,39 @@
+name: Quiz Football V12 Visual Diagnostics
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "quizfootball-v12-visual-diagnostics"
+  cancel-in-progress: true
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install browser runtime
+        run: npm install --no-save --no-package-lock playwright-core@1.55.0
+      - name: Run real-browser screenshot diagnostics
+        run: |
+          python3 -m http.server 4184 --bind 127.0.0.1 >/tmp/qf-v12diag.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1
+          QF_TEST_BASE=http://127.0.0.1:4184/ timeout 150s node tests/diagnose-v12.mjs
+      - name: Upload diagnostic screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qf-v12-diagnostics
+          path: qa-artifacts-v12
+          if-no-files-found: warn
+          retention-days: 3
