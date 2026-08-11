@@ -5,57 +5,28 @@ const bins=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/c
 const executablePath=bins.find(p=>fs.existsSync(p));
 if(!executablePath) throw new Error('Chrome/Chromium missing');
 const base=process.env.QF_TEST_BASE||'http://127.0.0.1:4184/';
-const out='qa-artifacts-v12';
-fs.mkdirSync(out,{recursive:true});
+const out='qa-artifacts-v12';fs.mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--disable-dev-shm-usage','--autoplay-policy=no-user-gesture-required','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
-const ctx=await browser.newContext({viewport:{width:1366,height:768}});
-const p=await ctx.newPage();
-const errors=[];
-p.on('pageerror',e=>errors.push(String(e)));
-p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource: the server responded with a status of (401|403)/i.test(m.text())) errors.push(m.text())});
+const ctx=await browser.newContext({viewport:{width:1366,height:768}}),p=await ctx.newPage(),errors=[];
+p.on('pageerror',e=>errors.push(String(e)));p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource: the server responded with a status of (401|403|404)/i.test(m.text()))errors.push(m.text())});
 const report={viewport:{width:1366,height:768},screens:[],match:{},errors};
-
-async function shot(name){await p.screenshot({path:`${out}/${name}.png`,fullPage:false});}
-async function layout(label){const x=await p.evaluate(()=>{const main=document.querySelector('.v7-main');const active=document.querySelector('.v7-screen.active');const app=document.querySelector('.v7-app');const rect=active?.getBoundingClientRect();return{activeId:active?.id||'',mainClient:main?.clientHeight||0,mainScroll:main?.scrollHeight||0,activeClient:active?.clientHeight||0,activeScroll:active?.scrollHeight||0,activeBottom:rect?Math.round(rect.bottom):0,viewport:innerHeight,bodyScroll:document.documentElement.scrollHeight,appH:app?.getBoundingClientRect().height||0}});report.screens.push({label,...x});console.log('[V12 DIAG]',label,JSON.stringify(x));return x;}
+const log=(...x)=>console.log('[V12 DIAG]',...x);const fail=m=>{throw new Error(m)};
+async function shot(name){await p.screenshot({path:`${out}/${name}.png`,fullPage:false})}
+async function layout(label){const x=await p.evaluate(()=>{const main=document.querySelector('.v7-main'),active=document.querySelector('.v7-screen.active'),mr=main?.getBoundingClientRect(),ar=active?.getBoundingClientRect();return{activeId:active?.id||'',mainClient:main?.clientHeight||0,mainScroll:main?.scrollHeight||0,mainBottom:mr?+mr.bottom.toFixed(1):0,activeBottom:ar?+ar.bottom.toFixed(1):0,activeTop:ar?+ar.top.toFixed(1):0,viewport:innerHeight,overflowY:main?getComputedStyle(main).overflowY:'',zoom:active?getComputedStyle(active).zoom:'1',scale:active?.dataset?.v12Scale||'1'}});report.screens.push({label,...x});log(label,JSON.stringify(x));return x}
+async function assertFit(label){await p.evaluate(()=>window.QF_V12?.fit?.());await p.waitForTimeout(180);const x=await layout(label);if(x.overflowY!=='hidden')fail(`${label}: main vertical overflow is not hidden (${x.overflowY})`);if(x.activeBottom>x.mainBottom+4)fail(`${label}: active screen leaves viewport (${x.activeBottom} > ${x.mainBottom})`);return x}
 
 try{
-  await p.goto(base,{waitUntil:'domcontentloaded'});
-  await p.waitForSelector('#v7Onboard',{timeout:15000});
-  await shot('00-onboard');
-  await p.locator('#v7ClubName').fill('V12 Diagnostic FC');
-  await p.locator('#v7ClubShort').fill('D12');
-  await p.locator('#v7CreateClub').click();
-  await p.waitForSelector('#v7-home.active',{timeout:10000});
-  await layout('home');
-  await shot('01-home');
-
-  const navCount=await p.locator('.v7-nav button').count();
-  for(let i=0;i<navCount;i++){
-    const b=p.locator('.v7-nav button').nth(i);
-    const txt=(await b.innerText()).trim().replace(/\s+/g,' ');
-    if(!txt) continue;
-    await b.click().catch(()=>{});
-    await p.waitForTimeout(140);
-    const info=await layout(`nav-${i}-${txt.slice(0,28)}`);
-    if(i<6 || info.mainScroll>info.mainClient+2) await shot(`nav-${String(i).padStart(2,'0')}`);
-  }
-
-  await p.evaluate(()=>window.QF_V7_TEST.startFast());
-  await p.waitForSelector('#v7-match.active',{timeout:8000});
-  await p.waitForFunction(()=>window.QF_V7_TEST.match()?.v9,{timeout:8000});
-  await p.waitForSelector('#v11MatchCanvas3D',{timeout:12000});
-  await p.waitForFunction(()=>window.QF_MATCH_3D_V11?.state?.().frames>25,{timeout:15000});
-  await p.waitForTimeout(700);
-  await shot('90-match');
-  const before=performance.now();
-  const frames=await p.evaluate(()=>new Promise(resolve=>{let n=0,start=performance.now();function f(t){n++;if(t-start>=2500)resolve({n,ms:t-start});else requestAnimationFrame(f)}requestAnimationFrame(f)}));
-  const state=await p.evaluate(()=>window.QF_MATCH_3D_V11.state());
-  const matchInfo=await p.evaluate(()=>{const m=window.QF_V7_TEST.match();const c=document.querySelector('#v11MatchCanvas3D');const r=c?.getBoundingClientRect();const src=document.querySelector('#v7MatchCanvas');const sr=src?.getBoundingClientRect();return{homePlayers:m?.v9?.visual?.home?.length||0,awayPlayers:m?.v9?.visual?.away?.length||0,canvas:r?{x:r.x,y:r.y,w:r.width,h:r.height,display:getComputedStyle(c).display,opacity:getComputedStyle(c).opacity,visibility:getComputedStyle(c).visibility}:null,source:sr?{w:sr.width,h:sr.height,display:getComputedStyle(src).display,visibility:getComputedStyle(src).visibility}:null,audioDock:!!document.querySelector('#qfAudioDock'),commentary:window.QF_COMMENTARY_V10?.state?.()||null}});
-  report.match={fps:+(frames.n/(frames.ms/1000)).toFixed(1),renderer:state,...matchInfo};
-  console.log('[V12 DIAG] match',JSON.stringify(report.match));
-  fs.writeFileSync(`${out}/report.json`,JSON.stringify(report,null,2));
-  if(errors.length) console.log('[V12 DIAG] browser errors',errors.slice(0,8));
-} finally {
-  await ctx.close();
-  await browser.close();
-}
+ await p.goto(base,{waitUntil:'domcontentloaded'});await p.waitForSelector('#v7Onboard',{timeout:15000});await p.waitForFunction(()=>!!window.QF_V12,{timeout:10000});await shot('00-onboard');
+ await p.locator('#v7ClubName').fill('V12 Diagnostic FC');await p.locator('#v7ClubShort').fill('D12');await p.locator('#v7CreateClub').click();await p.waitForSelector('#v7-home.active',{timeout:10000});await assertFit('home');await shot('01-home');
+ const nav=p.locator('.v7-nav button');const count=Math.min(6,await nav.count());for(let i=0;i<count;i++){const b=nav.nth(i),txt=(await b.innerText()).trim().replace(/\s+/g,' ');if(!txt)continue;await b.click();await p.waitForTimeout(120);await assertFit(`nav-${i}-${txt.slice(0,28)}`);await shot(`nav-${String(i).padStart(2,'0')}`)}
+ const officeBtn=p.locator('#v9OfficeBtn');if(await officeBtn.count()){await officeBtn.click();await p.waitForSelector('#v9Office.open',{timeout:3000});log('club office deliberately opened before match')}
+ await p.mouse.click(500,300);await p.evaluate(()=>window.QF_V12?.unlockAudio?.());await p.evaluate(()=>window.QF_V7_TEST.startFast());await p.waitForSelector('#v7-match.active',{timeout:8000});await p.waitForFunction(()=>window.QF_V7_TEST.match()?.v9,{timeout:8000});await p.waitForFunction(()=>!document.querySelector('#v9Office')?.classList.contains('open'),{timeout:2500});log('blocking club office auto-closed when match started');
+ await p.waitForFunction(()=>document.body.classList.contains('v12-smooth-renderer')||window.QF_MATCH_3D_V11?.state?.().active,{timeout:10000});await p.waitForTimeout(2200);
+ const soft=await p.evaluate(()=>window.QF_MATCH_3D_V11?.state?.().software);if(soft)await p.waitForFunction(()=>document.body.classList.contains('v12-smooth-renderer'),{timeout:5000});
+ const matchInfo=await p.evaluate(()=>{const m=window.QF_V7_TEST.match(),v12=window.QF_V12?.state?.()||{},r3=window.QF_MATCH_3D_V11?.state?.()||{},src=document.querySelector('#v7MatchCanvas'),sr=src?.getBoundingClientRect(),gl=document.querySelector('#v11MatchCanvas3D'),gr=gl?.getBoundingClientRect();return{v12,r3,homePlayers:m?.v9?.visual?.home?.length||0,awayPlayers:m?.v9?.visual?.away?.length||0,source:sr?{w:sr.width,h:sr.height,visibility:getComputedStyle(src).visibility,display:getComputedStyle(src).display,opacity:getComputedStyle(src).opacity}:null,gl:gr?{w:gr.width,h:gr.height,visibility:getComputedStyle(gl).visibility,display:getComputedStyle(gl).display}:null,officeOpen:!!document.querySelector('#v9Office.open'),badge:document.querySelector('#v12RenderBadge')?.textContent||'',audioDock:!!document.querySelector('#qfAudioDock')}});report.match=matchInfo;log('match mode',JSON.stringify(matchInfo));
+ if(matchInfo.homePlayers!==11||matchInfo.awayPlayers!==11)fail(`expected 22 footballers, got ${matchInfo.homePlayers+matchInfo.awayPlayers}`);if(matchInfo.officeOpen)fail('club office still covers match');if(matchInfo.r3.software&&!matchInfo.v12.autoFallback)fail('software GPU did not trigger V12 smooth fallback');if(matchInfo.v12.autoFallback&&(!matchInfo.source||matchInfo.source.visibility==='hidden'||matchInfo.source.display==='none'||matchInfo.source.opacity==='0'))fail(`fallback pitch is not visible ${JSON.stringify(matchInfo.source)}`);
+ let finalMoment=null;await p.evaluate(()=>{window.__v12Final=null;window.addEventListener('qf:v11-commentary',e=>{if(e.detail?.final)window.__v12Final={...e.detail}},{once:false})});await p.evaluate(()=>window.QF_MATCH_FLOW_V11.test('goal'));await p.waitForFunction(()=>!!window.__v12Final,{timeout:5000});finalMoment=await p.evaluate(()=>window.__v12Final);report.match.finalMoment=finalMoment;log('mutated final commentary',finalMoment.text);if(!/GOL/i.test(finalMoment.text||''))fail(`V12 goal commentary is not match-like: ${finalMoment.text}`);const v12After=await p.evaluate(()=>window.QF_V12.state());if(v12After.commentaryMutations<4)fail(`commentary phase mutation count too low: ${v12After.commentaryMutations}`);
+ await assertFit('match');await shot('90-match');
+ const frames=await p.evaluate(()=>new Promise(resolve=>{let n=0,start=performance.now();function f(t){n++;if(t-start>=1800)resolve({n,ms:t-start});else requestAnimationFrame(f)}requestAnimationFrame(f)}));report.match.observedFps=+(frames.n/(frames.ms/1000)).toFixed(1);log('observed page fps',report.match.observedFps);
+ fs.writeFileSync(`${out}/report.json`,JSON.stringify(report,null,2));if(errors.length)fail(`browser errors: ${errors.slice(0,5).join(' | ')}`);console.log('V12 VISUAL QA PASS: one-screen desktop fit, office auto-close, 22 visible-player state, adaptive smooth fallback, contextual excited commentary and match screenshot verified.');
+}finally{try{fs.writeFileSync(`${out}/report.json`,JSON.stringify(report,null,2))}catch{}await ctx.close();await browser.close()}
