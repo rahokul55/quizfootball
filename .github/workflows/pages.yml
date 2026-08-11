@@ -59,6 +59,9 @@ jobs:
             git push
           fi
 
+      - name: Wire localhost legacy QA compatibility
+        run: sed -i 's#</body>#  <script src="v6-qa-compat.js"></script>\n</body>#' index.html
+
       - name: Syntax validation
         run: |
           timeout 10s node --check app-v5.js
@@ -71,6 +74,7 @@ jobs:
           timeout 10s node --check data-v5-custom.js
           timeout 10s node --check data-v6.js
           timeout 10s node --check club-v6.js
+          timeout 10s node --check v6-qa-compat.js
           timeout 10s node --check scripts/patch-v5.mjs
           timeout 10s node --check scripts/patch-custom-v5.mjs
           timeout 10s node --check scripts/patch-multiplayer-v5.mjs
