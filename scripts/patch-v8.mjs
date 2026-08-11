@@ -31,4 +31,18 @@ online=replaceOnce(online,
 'if(Math.random()<xg*attackChance("away")*4.1){N.match.away++;N.match.momentumAway=0;N.match.multAway=1;log(`${Math.round(N.match.minute)}\' GOL ${N.guestClub.short}! Momentum sıfırlandı.`)}else{const miss=Math.random();if(miss<.42)log(`${Math.round(N.match.minute)}\' ${N.guestClub.short} şutu dışarı gitti.`);else if(miss<.78)log(`${Math.round(N.match.minute)}\' ${N.guestClub.short} şutunda kaleci kurtardı.`);else log(`${Math.round(N.match.minute)}\' ${N.guestClub.short} direğe takıldı!`)}',
 'online away misses');
 fs.writeFileSync('online-v7.js',online);
+let audio=fs.readFileSync('audio-v8.js','utf8');
+audio=replaceOnce(audio,
+'function classify(text){const t=(text||"").toLocaleLowerCase("tr-TR");const ownShort=(window.QF_V7_CORE?.clubSnapshot?.().short||"").toLocaleLowerCase("tr-TR");',
+'function isMineEvent(text){const t=(text||"").toLocaleLowerCase("tr-TR"),own=(window.QF_V7_CORE?.clubSnapshot?.().short||"").toLocaleLowerCase("tr-TR");if(/rakibin|kalecimiz|savunma rakip/.test(t))return false;if(own&&(t.includes(`${own} şut`)||t.includes(`${own} dire`)))return true;return mode!=="online"}\nfunction classify(text){const t=(text||"").toLocaleLowerCase("tr-TR");const ownShort=(window.QF_V7_CORE?.clubSnapshot?.().short||"").toLocaleLowerCase("tr-TR");',
+'audio event perspective helper');
+audio=replaceOnce(audio,
+'case"miss":effect("miss");say(pick(lines.miss),{priority:4});break;case"save":effect("save");say(pick(lines.save),{priority:5});break;case"post":effect("post");say(pick(lines.post),{priority:7});break;',
+'case"miss":effect("miss");say(isMineEvent(text)?pick(lines.miss):pick(["Rakibin şutu dışarıda. Tehlikeyi atlattık.","Rakip önemli fırsattan yararlanamadı; top kaleyi bulmadı."]),{priority:4});break;case"save":effect("save");say(isMineEvent(text)?pick(["Şutumuz geldi ama rakip kaleci kurtardı.","Net fırsatta rakip kaleci gole izin vermedi."]):pick(lines.save),{priority:5});break;case"post":effect("post");say(isMineEvent(text)?pick(lines.post):pick(["Rakip direkte takıldı! Büyük tehlike atlattık.","Rakibin vuruşu direkten geri geldi; şans bizim yanımızda."]),{priority:7});break;',
+'audio perspective commentary');
+audio=replaceOnce(audio,
+'function leaveMatch(){if(!active)return;lastMatchSnapshot=getSnapshot().ownName?getSnapshot():lastScore;active=false;',
+'function leaveMatch(){if(!active)return;lastMatchSnapshot=lastScore||lastMatchSnapshot;active=false;',
+'final score snapshot');
+fs.writeFileSync('audio-v8.js',audio);
 console.log(`V8 audio wiring and match-event patches ready: ${changed} changes.`);
