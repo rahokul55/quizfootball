@@ -1,4 +1,4 @@
-name: Quiz Football V12 Visual Diagnostics
+name: Quiz Football V13 Visual Diagnostics
 
 on:
   push:
@@ -9,13 +9,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: "quizfootball-v12-visual-diagnostics"
+  group: "quizfootball-v13-visual-diagnostics"
   cancel-in-progress: true
 
 jobs:
   diagnose:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 9
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -23,17 +23,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Apply V13 production wiring in checkout
+        run: timeout 20s node scripts/patch-v13.mjs
       - name: Install browser runtime
         run: npm install --no-save --no-package-lock playwright-core@1.55.0
-      - name: Run real-browser screenshot diagnostics
+      - name: Run V13 real-browser 3D screenshot diagnostics
         run: |
-          python3 -m http.server 4184 --bind 127.0.0.1 >/tmp/qf-v12diag.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1
-          QF_TEST_BASE=http://127.0.0.1:4184/ timeout 150s node tests/diagnose-v12.mjs
-      - name: Upload diagnostic screenshots
+          python3 -m http.server 4185 --bind 127.0.0.1 >/tmp/qf-v13diag.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1
+          QF_TEST_BASE=http://127.0.0.1:4185/ timeout 170s node tests/diagnose-v13.mjs
+      - name: Upload V13 diagnostic screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: qf-v12-diagnostics
-          path: qa-artifacts-v12
+          name: qf-v13-diagnostics
+          path: qa-artifacts-v13
           if-no-files-found: warn
           retention-days: 3
