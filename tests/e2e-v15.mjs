@@ -8,7 +8,7 @@ const browser=await chromium.launch({headless:true,executablePath,args:['--no-sa
 const ctx=await browser.newContext({viewport:{width:1366,height:768}}),p=await ctx.newPage(),errors=[];
 p.on('pageerror',e=>errors.push(String(e)));p.on('console',m=>{if(m.type()==='error'&&!/status of (401|403|404)|Failed to load resource/i.test(m.text()))errors.push(m.text())});
 const fail=m=>{throw new Error(m)},log=(...x)=>console.log('[V15 QA]',...x);
-await p.addInitScript(()=>{localStorage.clear();localStorage.setItem('qf-v5-profile',JSON.stringify({username:'V15QA',profileKey:'v15qa'}));localStorage.setItem('qf-v15-simulator','3d')});
+await p.addInitScript(()=>{if(!sessionStorage.getItem('qf-v15-seeded')){localStorage.clear();localStorage.setItem('qf-v5-profile',JSON.stringify({username:'V15QA',profileKey:'v15qa'}));localStorage.setItem('qf-v15-simulator','3d');sessionStorage.setItem('qf-v15-seeded','1')}});
 try{
  await p.goto(base,{waitUntil:'domcontentloaded'});await p.waitForSelector('#v7Onboard',{timeout:15000});await p.locator('#v7ClubName').fill('V15 QA FC');await p.locator('#v7ClubShort').fill('V15');await p.locator('#v7CreateClub').click();await p.waitForSelector('#v7-home.active',{timeout:8000});
  await p.locator('#v7Arcade').click();await p.waitForSelector('#homeScreen.active',{timeout:8000});await p.locator('#soloStartBtn').click();await p.waitForSelector('#gameScreen.active',{timeout:10000});await p.waitForTimeout(500);
