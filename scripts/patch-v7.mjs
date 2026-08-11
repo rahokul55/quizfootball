@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+let html=fs.readFileSync('index.html','utf8');
+if(!html.includes('chairman-v7.css')) html=html.replace('<link rel="stylesheet" href="v6.css?v=600" />','<link rel="stylesheet" href="v6.css?v=600" />\n  <link rel="stylesheet" href="chairman-v7.css?v=700" />');
+if(!html.includes('data-v7.js')) html=html.replace('<script src="data-v6.js?v=600"></script>','<script src="data-v6.js?v=600"></script>\n  <script src="data-v7.js?v=700"></script>');
+if(!html.includes('chairman-v7.js')) html=html.replace('<script src="club-v6.js?v=600"></script>','<script src="club-v6.js?v=600"></script>\n  <script src="chairman-v7.js?v=700"></script>\n  <script src="online-v7.js?v=700"></script>');
+html=html.replace(/<title>[^<]*<\/title>/,'<title>Quiz Football V7 — Chairman Mode</title>').replace('Quiz Football V6 — futbol quiz, kulüp yönetimi ve canlı maç simülasyonu.','Quiz Football V7 — kulüp başkanlığı, transfer yönetimi, hızlı maç simülasyonu ve canlı futbol quiz düelloları.');
+fs.writeFileSync('index.html',html);
+let sw=fs.readFileSync('sw-v5.js','utf8');
+sw=sw.replace(/const CACHE='quizfootball-[^']+'/,"const CACHE='quizfootball-v7.0.0'");
+for(const file of ['./chairman-v7.css','./data-v7.js','./chairman-v7.js','./online-v7.js']) if(!sw.includes(`'${file}'`)) sw=sw.replace("'./club-v6.js'",`'./club-v6.js','${file}'`);
+fs.writeFileSync('sw-v5.js',sw);
+console.log('V7 production wiring ready.');
