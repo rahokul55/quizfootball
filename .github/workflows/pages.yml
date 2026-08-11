@@ -1,4 +1,4 @@
-name: Build and Test Quiz Football V14
+name: Build and Test Quiz Football V15
 
 on:
   push:
@@ -9,13 +9,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: "quizfootball-v14-qa"
+  group: "quizfootball-v15-qa"
   cancel-in-progress: true
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 32
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Wire production layers through V14
+      - name: Wire production layers through V15
         run: |
           timeout 15s node scripts/patch-v5.mjs
           timeout 15s node scripts/patch-custom-v5.mjs
@@ -41,6 +41,7 @@ jobs:
           timeout 20s node scripts/patch-v11.mjs
           timeout 20s node scripts/patch-v13.mjs
           timeout 20s node scripts/patch-v14.mjs
+          timeout 20s node scripts/patch-v15.mjs
 
       - name: Resolve player and team images
         run: timeout 180s node scripts/build-images-v4.mjs
@@ -48,14 +49,14 @@ jobs:
       - name: Resolve manager images
         run: timeout 180s node scripts/build-manager-images-v5.mjs
 
-      - name: Persist V14 production runtime
+      - name: Persist V15 production runtime
         if: github.actor != 'github-actions[bot]'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html sw-v5.js app-v5.js chairman-v7.js online-v7.js match-v9.js career-v9.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json match-flow-v11.js v13.css match3d-v13.js audio-v13.js runtime-v13.js commentary-v14.js scripts/patch-v13.mjs scripts/patch-v14.mjs tests/diagnose-v13.mjs tests/perf-v14.mjs
+          git add index.html sw-v5.js app-v5.js chairman-v7.js online-v7.js match-v9.js career-v9.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json match-flow-v11.js v13.css v15.css match3d-v13.js audio-v13.js runtime-v13.js commentary-v15.js broadcast-v15.js scripts/patch-v13.mjs scripts/patch-v14.mjs scripts/patch-v15.mjs tests/diagnose-v13.mjs tests/perf-v14.mjs tests/e2e-v15.mjs
           if ! git diff --cached --quiet; then
-            git commit -m "Refresh production runtime assets for V14"
+            git commit -m "Refresh production runtime assets for V15"
             git pull --rebase origin main
             git push
           fi
@@ -80,12 +81,15 @@ jobs:
           timeout 10s node --check match-flow-v11.js
           timeout 10s node --check match3d-v13.js
           timeout 10s node --check audio-v13.js
-          timeout 10s node --check commentary-v14.js
+          timeout 10s node --check commentary-v15.js
+          timeout 10s node --check broadcast-v15.js
           timeout 10s node --check runtime-v13.js
           timeout 10s node --check scripts/patch-v13.mjs
           timeout 10s node --check scripts/patch-v14.mjs
+          timeout 10s node --check scripts/patch-v15.mjs
           timeout 10s node --check tests/diagnose-v13.mjs
           timeout 10s node --check tests/perf-v14.mjs
+          timeout 10s node --check tests/e2e-v15.mjs
 
       - name: Static data and engine QA
         run: |
@@ -103,31 +107,39 @@ jobs:
         run: |
           python3 -m http.server 4179 --bind 127.0.0.1 >/tmp/qf-v7.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4179/ timeout 150s node tests/e2e-v7.mjs
 
-      - name: V14 visual 3D and commentator browser QA
+      - name: V14 renderer regression QA
         run: |
           python3 -m http.server 4185 --bind 127.0.0.1 >/tmp/qf-v14.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4185/ timeout 170s node tests/diagnose-v13.mjs
 
-      - name: V14 frame pacing and dedupe QA
+      - name: V14 frame pacing regression QA
         run: |
           python3 -m http.server 4187 --bind 127.0.0.1 >/tmp/qf-v14perf.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4187/ timeout 120s node tests/perf-v14.mjs
 
-      - name: Verify V14 production bundle
+      - name: V15 one-screen quiz and live broadcast QA
+        run: |
+          python3 -m http.server 4189 --bind 127.0.0.1 >/tmp/qf-v15.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4189/ timeout 170s node tests/e2e-v15.mjs
+
+      - name: Verify V15 production bundle
         run: |
           test -s index.html
           test -s sw-v5.js
           test -s match-flow-v11.js
           test -s match3d-v13.js
           test -s audio-v13.js
-          test -s commentary-v14.js
+          test -s commentary-v15.js
+          test -s broadcast-v15.js
           test -s runtime-v13.js
-          test -s v13.css
-          grep -q 'Quiz Football V14' index.html
+          test -s v15.css
+          grep -q 'Quiz Football V15' index.html
           test "$(grep -c 'match-details-v10.js?v=1000' index.html)" -eq 1
-          test "$(grep -c 'match3d-v13.js?v=1400' index.html)" -eq 1
-          test "$(grep -c 'commentary-v14.js?v=1400' index.html)" -eq 1
-          test "$(grep -c 'commentary-v13.js' index.html)" -eq 0
-          test "$(grep -c 'runtime-v13.js?v=1400' index.html)" -eq 1
-          grep -q "quizfootball-v14.0.0" sw-v5.js
-          grep -q 'V14_FRAME_PACING' match3d-v13.js
-          grep -q 'QF_COMMENTARY_V14' commentary-v14.js
-          echo "V14 production bundle verified: 60Hz render cadence, pooled WebGL buffers, cached layout reads, one match event runtime and deduplicated commentator."
+          test "$(grep -c 'match3d-v13.js?v=1500' index.html)" -eq 1
+          test "$(grep -c 'commentary-v15.js?v=1500' index.html)" -eq 1
+          test "$(grep -c 'broadcast-v15.js?v=1500' index.html)" -eq 1
+          test "$(grep -c 'v15.css?v=1500' index.html)" -eq 1
+          test "$(grep -c 'commentary-v14.js' index.html)" -eq 0
+          grep -q "quizfootball-v15.0.0" sw-v5.js
+          grep -q 'V15_BROADCAST_REALISM' match3d-v13.js
+          grep -q 'QF_COMMENTARY_V15' commentary-v15.js
+          grep -q 'QF_BROADCAST_V15' broadcast-v15.js
+          grep -q 'SİMÜLATÖR' broadcast-v15.js
+          echo "V15 production verified: one-screen Quiz Arena, switchable 2D/3D broadcast, slower continuous movement, complete pitch markings and instant deduplicated Turkish commentary."
