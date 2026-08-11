@@ -1,0 +1,36 @@
+import { chromium } from 'playwright-core';
+import fs from 'node:fs';
+
+const bins=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'];
+const executablePath=bins.find(p=>fs.existsSync(p));
+if(!executablePath) throw new Error('Chrome/Chromium missing');
+const base=process.env.QF_TEST_BASE||'http://127.0.0.1:4185/';
+const out='qa-artifacts-v13';fs.mkdirSync(out,{recursive:true});
+const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--disable-dev-shm-usage','--autoplay-policy=no-user-gesture-required','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
+const ctx=await browser.newContext({viewport:{width:1366,height:768}}),p=await ctx.newPage(),errors=[];
+p.on('pageerror',e=>errors.push(String(e)));
+p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource: the server responded with a status of (401|403|404)/i.test(m.text()))errors.push(m.text())});
+const report={viewport:{width:1366,height:768},screens:[],renderer:{},audio:{},errors};
+const fail=m=>{throw new Error(m)},log=(...x)=>console.log('[V13 QA]',...x);
+async function shot(name){await p.screenshot({path:`${out}/${name}.png`,fullPage:false})}
+async function measure(label){const x=await p.evaluate(()=>{const main=document.querySelector('.v7-main'),s=document.querySelector('.v7-screen.active'),mr=main?.getBoundingClientRect(),sr=s?.getBoundingClientRect(),nav=document.querySelector('.v7-nav button');return{id:s?.id||'',zoom:s?getComputedStyle(s).zoom:'1',mainBottom:mr?.bottom||0,screenBottom:sr?.bottom||0,mainScroll:main?.scrollHeight||0,mainClient:main?.clientHeight||0,navFont:nav?parseFloat(getComputedStyle(nav).fontSize):0}});report.screens.push({label,...x});log(label,x);if(Math.abs(parseFloat(x.zoom||'1')-1)>.001)fail(`${label}: zoom is not 1 (${x.zoom})`);if(x.screenBottom>x.mainBottom+4)fail(`${label}: screen overflow ${x.screenBottom} > ${x.mainBottom}`);if(x.navFont&&x.navFont<11)fail(`${label}: nav too small ${x.navFont}px`);return x}
+async function fps(ms=1600){return p.evaluate(ms=>new Promise(resolve=>{let n=0,start=performance.now();function f(t){n++;if(t-start>=ms)resolve(+(n/(t-start)*1000).toFixed(1));else requestAnimationFrame(f)}requestAnimationFrame(f)}),ms)}
+
+try{
+  await p.goto(base,{waitUntil:'domcontentloaded'});await p.waitForSelector('#v7Onboard',{timeout:15000});await p.waitForFunction(()=>!!window.QF_V13&&!!window.QF_MATCH_3D_V13&&!!window.QF_COMMENTARY_V13,{timeout:10000});
+  await p.locator('#v7ClubName').fill('V13 Test FC');await p.locator('#v7ClubShort').fill('V13');await p.locator('#v7CreateClub').click();await p.waitForSelector('#v7-home.active',{timeout:10000});await p.waitForTimeout(300);await measure('home');
+  const nav=p.locator('.v7-nav button'),count=Math.min(6,await nav.count());for(let i=0;i<count;i++){const b=nav.nth(i),txt=(await b.innerText()).trim().replace(/\s+/g,' ');await b.click();await p.waitForTimeout(180);await windowFit();await measure(`nav-${i}-${txt.slice(0,24)}`)}
+  const pagerCount=await p.locator('#v7-market .v13-pager').count();if(!pagerCount)fail('Transfer list has no V13 pager');
+  const office=p.locator('#v9OfficeBtn');if(await office.count()){await office.click();await p.waitForTimeout(180)}
+  await p.mouse.click(500,300);await p.evaluate(()=>window.QF_AUDIO_V13?.unlock?.());await p.evaluate(()=>window.QF_V7_TEST.startFast());await p.waitForSelector('#v7-match.active',{timeout:8000});await p.waitForFunction(()=>!!document.getElementById('v13MatchCanvas3D'),{timeout:8000});await p.waitForFunction(()=>{const s=window.QF_MATCH_3D_V13?.state?.();return s?.active&&s.players===22},{timeout:10000});await p.waitForTimeout(3000);
+  const r=await p.evaluate(()=>{const s=window.QF_MATCH_3D_V13.state(),src=document.getElementById('v7MatchCanvas'),gl=document.getElementById('v13MatchCanvas3D'),sr=src?.getBoundingClientRect(),gr=gl?.getBoundingClientRect();return{...s,sourceVisibility:src?getComputedStyle(src).visibility:'',sourceDisplay:src?getComputedStyle(src).display:'',sourceRect:sr?{w:sr.width,h:sr.height}:null,glRect:gr?{w:gr.width,h:gr.height}:null,legacyCanvases:document.querySelectorAll('#v10MatchCanvas3D,#v11MatchCanvas3D').length,officeOpen:!!document.querySelector('#v9Office.open,.v9-office.open')}});report.renderer=r;log('renderer',r);
+  if(!r.active||r.fallback)fail(`V13 3D is not authoritative: ${JSON.stringify(r)}`);if(r.players!==22)fail(`expected 22 3D players, got ${r.players}`);if(r.drawCalls>4)fail(`too many draw calls: ${r.drawCalls}`);if(r.instances<180)fail(`too few 3D instances: ${r.instances}`);if(r.sourceVisibility!=='hidden')fail(`2D source still visible: ${r.sourceVisibility}`);if(r.legacyCanvases)fail(`legacy 3D canvases present: ${r.legacyCanvases}`);if(r.officeOpen)fail('club office still covers match');if(!r.glRect||r.glRect.w<600||r.glRect.h<300)fail(`3D canvas too small ${JSON.stringify(r.glRect)}`);
+  const preFps=await fps();report.renderer.observedFps=preFps;log('observed fps',preFps);
+  await p.locator('#qfAudioToggle').click();await p.waitForTimeout(120);const a=await p.evaluate(()=>{const panel=document.getElementById('qfAudioPanel'),s=window.QF_AUDIO_V13.getSettings();return{selects:panel?.querySelectorAll('select').length||0,checks:panel?.querySelectorAll('input[type=checkbox]').length||0,ranges:panel?.querySelectorAll('input[type=range]').length||0,rate:s.rate,commentator:s.commentator}});report.audio=a;log('audio',a);if(a.selects!==0)fail(`commentator style select still exists (${a.selects})`);if(a.checks!==1)fail(`expected one commentator toggle, got ${a.checks}`);if(a.ranges!==1)fail(`expected one volume range, got ${a.ranges}`);if(a.rate>.90)fail(`commentator rate too fast ${a.rate}`);
+  await p.evaluate(()=>window.QF_COMMENTARY_V13.test('goal'));await p.waitForTimeout(500);const c=await p.evaluate(()=>window.QF_COMMENTARY_V13.state());report.audio.commentary=c;log('commentary',c);if(!/GOL/i.test(c.lastText||''))fail(`goal commentary missing: ${c.lastText}`);if(c.queue>2)fail(`commentary queue too large: ${c.queue}`);
+  await windowFit();await measure('match-1366');await shot('match-1366x768');
+  await p.setViewportSize({width:1920,height:1080});await p.waitForTimeout(350);await windowFit();await measure('match-1920');await shot('match-1920x1080');
+  fs.writeFileSync(`${out}/report.json`,JSON.stringify(report,null,2));if(errors.length)fail(`browser errors: ${errors.slice(0,6).join(' | ')}`);console.log('V13 VISUAL QA PASS: authoritative instanced 3D with 22 players, no legacy/fallback canvas, readable zoom-1 UI, paginated lists and single paced commentator controls verified.');
+}finally{try{fs.writeFileSync(`${out}/report.json`,JSON.stringify(report,null,2))}catch{}await ctx.close();await browser.close()}
+
+async function windowFit(){await p.evaluate(()=>window.QF_V13?.fit?.());await p.waitForTimeout(160)}
