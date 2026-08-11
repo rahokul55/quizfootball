@@ -122,3 +122,7 @@ body.v13-runtime .v7-budget-item b{font-size:15px!important}body.v13-runtime .v7
 .v13-commentary-caption{font-size:15px!important;max-width:min(820px,72vw)!important}
 .v13-audio-head b{font-size:15px!important}.v13-spiker-switch{font-size:12px!important}.v13-volume span,.v13-volume b{font-size:11px!important}
 @media(min-width:1600px){body.v13-runtime .v7-nav button{font-size:14px!important}body.v13-runtime .v7-row b{font-size:13px!important}body.v13-runtime .v7-row small{font-size:11px!important}#v7-match .v7-qopt{font-size:14px!important}.v13-commentary-caption{font-size:16px!important}}
+
+/* V13_2_MATCH_OVERLAY_GUARD */
+body.v13-match-active #v9Office,body.v13-match-active .v9-office{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+body.v13-match-active #v13MatchCanvas3D{display:block!important;visibility:visible!important;opacity:1!important}
