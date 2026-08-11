@@ -65,7 +65,11 @@ jobs:
           fi
 
       - name: Wire localhost legacy QA compatibility
-        run: sed -i 's#</body>#  <script src="v6-qa-compat.js"></script>\n</body>#' index.html
+        run: |
+          # Production has already been persisted above. Legacy V5-V11 browser tests
+          # must run without the newer V12 adaptive runtime so each renderer is isolated.
+          sed -i '/runtime-v12.js/d;/v12.css/d' index.html
+          sed -i 's#</body>#  <script src="v6-qa-compat.js"></script>\n</body>#' index.html
 
       - name: Syntax validation
         run: |
