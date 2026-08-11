@@ -1,13 +1,11 @@
 import fs from 'node:fs';
 function rw(path,fn){const old=fs.readFileSync(path,'utf8'),next=fn(old);if(next!==old)fs.writeFileSync(path,next)}
 rw('index.html',s=>{
-  // Repair any earlier malformed V11/V13 metadata and keep one canonical title block.
-  const headBlock='  <meta name="description" content="Quiz Football V13 — akıcı 3D maç yayını, kulüp yönetimi ve futbol quiz deneyimi." />\n  <title>Quiz Football V13 — 3D Match Broadcast</title>\n';
-  const stylesAnchor='  <link rel="stylesheet" href="styles.css?v=500" />';
-  if(/<meta name="description"/i.test(s)) s=s.replace(/\s*<meta name="description"[\s\S]*?(?=\s*<link rel="stylesheet" href="styles\.css\?v=500" \/>)/i,'\n'+headBlock);
-  else s=s.replace(stylesAnchor,headBlock+stylesAnchor);
-  s=s.replace(/\s*<title>[^<]*<\/title>\s*(?=<link rel="stylesheet" href="styles\.css\?v=500" \/>)/g,'\n');
-  if(!s.includes('<title>Quiz Football V13 — 3D Match Broadcast</title>')) s=s.replace(stylesAnchor,'  <title>Quiz Football V13 — 3D Match Broadcast</title>\n'+stylesAnchor);
+  // Rebuild the fragile beginning of <head> from a stable anchor so malformed legacy metadata cannot survive.
+  const theme='  <meta name="theme-color" content="#071018" />';
+  const enhanced='  <link rel="stylesheet" href="enhancements-v4.css?v=500" />';
+  const canonical=`${theme}\n  <meta name="description" content="Quiz Football V13 — akıcı 3D maç yayını, kulüp yönetimi ve futbol quiz deneyimi." />\n  <title>Quiz Football V13 — 3D Match Broadcast</title>\n  <link rel="stylesheet" href="styles.css?v=500" />\n`;
+  if(s.includes(theme)&&s.includes(enhanced)) s=s.replace(new RegExp(theme.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'[\\s\\S]*?(?='+enhanced.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')'),canonical);
   s=s.replace(/<small>V(?:11|12)<\/small>/g,'<small>V13</small>');
 
   // CSS is canonical and unique.
@@ -25,4 +23,4 @@ rw('sw-v5.js',s=>{
   for(const f of["'./v13.css'","'./audio-v13.js'","'./match3d-v13.js'","'./commentary-v13.js'","'./runtime-v13.js'"]) if(!s.includes(f)) s=s.replace("'./icon.svg'",`${f},'./icon.svg'`);
   return s;
 });
-console.log('V13.1 canonical production wiring applied: one 3D renderer, one audio engine, one commentator, repaired metadata.');
+console.log('V13.1 canonical production wiring applied: repaired head, one 3D renderer, one audio engine, one commentator.');
