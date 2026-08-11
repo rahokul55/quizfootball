@@ -1,4 +1,4 @@
-name: Build and Test Quiz Football V7
+name: Build and Test Quiz Football V8
 
 on:
   push:
@@ -9,13 +9,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: "quizfootball-v7-qa"
+  group: "quizfootball-v8-qa"
   cancel-in-progress: true
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 24
+    timeout-minutes: 26
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -45,6 +45,9 @@ jobs:
       - name: Wire V7 chairman production layer
         run: timeout 15s node scripts/patch-v7.mjs
 
+      - name: Wire V8 Turkish audio and match events
+        run: timeout 15s node scripts/patch-v8.mjs
+
       - name: Resolve player and team images
         run: timeout 180s node scripts/build-images-v4.mjs
 
@@ -56,9 +59,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html app-v5.js chairman-v7.js sw-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
+          git add index.html app-v5.js chairman-v7.js online-v7.js sw-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
           if ! git diff --cached --quiet; then
-            git commit -m "Refresh production runtime assets for V7"
+            git commit -m "Refresh production runtime assets for V8"
             git push
           fi
 
@@ -80,6 +83,7 @@ jobs:
           timeout 10s node --check data-v7.js
           timeout 10s node --check chairman-v7.js
           timeout 10s node --check online-v7.js
+          timeout 10s node --check audio-v8.js
           timeout 10s node --check v6-qa-compat.js
           timeout 10s node --check scripts/patch-v5.mjs
           timeout 10s node --check scripts/patch-custom-v5.mjs
@@ -87,11 +91,13 @@ jobs:
           timeout 10s node --check scripts/patch-social-v5.mjs
           timeout 10s node --check scripts/patch-ui-extras-v5.mjs
           timeout 10s node --check scripts/patch-v7.mjs
+          timeout 10s node --check scripts/patch-v8.mjs
           timeout 10s node --check scripts/build-manager-images-v5.mjs
           timeout 10s node --check tests/validate-v5.mjs
           timeout 10s node --check tests/validate-v5-advanced.mjs
           timeout 10s node --check tests/validate-v5-custom.mjs
           timeout 10s node --check tests/validate-v7.mjs
+          timeout 10s node --check tests/validate-v8.mjs
           timeout 10s node --check tests/e2e-v5.mjs
           timeout 10s node --check tests/e2e-v5-advanced.mjs
           timeout 10s node --check tests/e2e-v5-migration.mjs
@@ -99,6 +105,7 @@ jobs:
           timeout 10s node --check tests/e2e-v5-custom.mjs
           timeout 10s node --check tests/e2e-v6.mjs
           timeout 10s node --check tests/e2e-v7.mjs
+          timeout 10s node --check tests/e2e-v8.mjs
 
       - name: V5 base data modes and rules QA
         run: timeout 30s node tests/validate-v5.mjs
@@ -111,6 +118,9 @@ jobs:
 
       - name: V7 chairman economy and data QA
         run: timeout 30s node tests/validate-v7.mjs
+
+      - name: V8 Turkish match audio QA
+        run: timeout 30s node tests/validate-v8.mjs
 
       - name: Install browser QA runtime
         run: npm install --no-save --no-package-lock playwright-core@1.55.0
@@ -171,6 +181,14 @@ jobs:
           sleep 1
           QF_TEST_BASE=http://127.0.0.1:4179/ timeout 150s node tests/e2e-v7.mjs
 
+      - name: V8 Turkish commentator and SFX browser QA
+        run: |
+          python3 -m http.server 4180 --bind 127.0.0.1 >/tmp/quizfootball-http-v8.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+          QF_TEST_BASE=http://127.0.0.1:4180/ timeout 120s node tests/e2e-v8.mjs
+
       - name: Verify production files
         run: |
           test -s index.html
@@ -182,6 +200,8 @@ jobs:
           test -s chairman-v7.js
           test -s online-v7.js
           test -s chairman-v7.css
+          test -s audio-v8.js
+          test -s audio-v8.css
           test -s cloud-v5.js
           test -s sw-v5.js
           test -s images-v4.js
@@ -190,9 +210,15 @@ jobs:
           grep -q 'chairman-v7.js' index.html
           grep -q 'online-v7.js' index.html
           grep -q 'chairman-v7.css' index.html
-          grep -q 'quizfootball-v7.0.1' sw-v5.js
+          grep -q 'audio-v8.js' index.html
+          grep -q 'audio-v8.css' index.html
+          grep -q 'quizfootball-v8.0.0' sw-v5.js
           grep -q 'function autoPick' chairman-v7.js
           grep -q 'function managerRequests' chairman-v7.js
           grep -q 'function startMatch' chairman-v7.js
+          grep -q 'Top direkten döndü' chairman-v7.js
           grep -q 'function hostTick' online-v7.js
-          echo "V7 production bundle verified. GitHub Pages branch deployment publishes main automatically."
+          grep -q 'direğe takıldı' online-v7.js
+          grep -q 'SpeechSynthesisUtterance' audio-v8.js
+          grep -q 'function startCrowd' audio-v8.js
+          echo "V8 production bundle verified. Turkish commentator, procedural match SFX and stadium ambience are wired for GitHub Pages."
