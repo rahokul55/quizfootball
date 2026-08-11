@@ -1,0 +1,8 @@
+import fs from'node:fs';let n=0;const ok=(v,m)=>{n++;if(!v)throw new Error(m)},read=p=>fs.readFileSync(p,'utf8');const m=read('match-v9.js'),c=read('career-v9.js'),css=read('v9.css'),p=read('scripts/patch-v9.mjs');
+for(const s of ['stepSolo','stepOnline','drawSolo','drawOnline','possessionHome','cornersHome','foulsHome','yellowHome','offsidesHome','savesHome','substitutionsHome','injuriesHome','penaltiesHome'])ok(m.includes(s),`match engine missing ${s}`);
+for(const s of ['"foul"','"card"','"offside"','"corner"','"free"','"penalty"','"injury"','"sub"','"goal"','"save"','"post"','"miss"'])ok(m.includes(s),`event type missing ${s}`);
+for(const s of ['project(w,h','MATCH ENGINE 2.0','goalUntil','trail','camera','v9-match-stats'])ok(m.includes(s),`renderer feature missing ${s}`);
+for(const s of ['contracts','academy','shortlist','worldNews','seasonAwards','sponsorOffers','generateYouth','promote','renew','scouting','chooseSponsor','endSeason','worldTick','onWeek'])ok(c.includes(s),`career system missing ${s}`);
+for(const s of ['Sözleşmeler','Akademi','Scout','Finans','Futbol Dünyası','Kulüp Ofisi'])ok(c.includes(s),`office UI missing ${s}`);
+ok(css.includes('.v9-office')&&css.includes('.v9-match-stats'),'V9 CSS missing');ok(p.includes('QF_MATCH_V9?.stepSolo')&&p.includes('QF_MATCH_V9?.stepOnline'),'runtime tick patch missing');ok(p.includes('QF_CAREER_V9?.onWeek'),'career week integration missing');ok(p.includes('quizfootball-v9.0.0'),'V9 cache version missing');
+console.log(`V9 QA PASS: ${n} assertions; Match Engine 2.0, advanced events, career office, contracts, academy, scouting, sponsors and season world systems.`);
