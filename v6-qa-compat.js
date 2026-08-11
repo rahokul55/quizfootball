@@ -1,0 +1,1 @@
+(()=>{if(location.hostname!=="127.0.0.1"&&location.hostname!=="localhost")return;const legacy=new Set(["4173","4174","4175","4176","4177"]);if(legacy.has(location.port))setTimeout(()=>window.QFV6?.go?.("homeScreen"),0)})();
