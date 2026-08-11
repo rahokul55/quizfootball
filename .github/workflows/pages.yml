@@ -56,7 +56,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html app-v5.js sw-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
+          git add index.html app-v5.js chairman-v7.js sw-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
           if ! git diff --cached --quiet; then
             git commit -m "Refresh production runtime assets for V7"
             git push
@@ -190,7 +190,7 @@ jobs:
           grep -q 'chairman-v7.js' index.html
           grep -q 'online-v7.js' index.html
           grep -q 'chairman-v7.css' index.html
-          grep -q 'quizfootball-v7.0.0' sw-v5.js
+          grep -q 'quizfootball-v7.0.1' sw-v5.js
           grep -q 'function autoPick' chairman-v7.js
           grep -q 'function managerRequests' chairman-v7.js
           grep -q 'function startMatch' chairman-v7.js
