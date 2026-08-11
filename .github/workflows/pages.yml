@@ -1,4 +1,4 @@
-name: Build and Test Quiz Football V10
+name: Build and Test Quiz Football V11
 
 on:
   push:
@@ -9,13 +9,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: "quizfootball-v10-qa"
+  group: "quizfootball-v11-qa"
   cancel-in-progress: true
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 34
+    timeout-minutes: 36
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -45,6 +45,8 @@ jobs:
         run: timeout 20s node scripts/patch-v9.mjs
       - name: Wire V10 3D broadcast commentary and stadium layer
         run: timeout 20s node scripts/patch-v10.mjs
+      - name: Wire V11 cinematic match realism and commentary
+        run: timeout 20s node scripts/patch-v11.mjs
 
       - name: Resolve player and team images
         run: timeout 180s node scripts/build-images-v4.mjs
@@ -56,9 +58,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html app-v5.js chairman-v7.js online-v7.js audio-v8.js match-v9.js career-v9.js v9.css match3d-v10.js match-details-v10.js commentary-v10.js v10.css sw-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
+          git add index.html app-v5.js chairman-v7.js online-v7.js audio-v8.js match-v9.js career-v9.js v9.css match3d-v10.js match-details-v10.js commentary-v10.js v10.css sw-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json tests/e2e-v9.mjs tests/e2e-v10.mjs
           if ! git diff --cached --quiet; then
-            git commit -m "Refresh production runtime assets for V10"
+            git commit -m "Refresh production runtime assets for V11"
             git push
           fi
 
@@ -86,6 +88,8 @@ jobs:
           timeout 10s node --check match3d-v10.js
           timeout 10s node --check match-details-v10.js
           timeout 10s node --check commentary-v10.js
+          timeout 10s node --check match-flow-v11.js
+          timeout 10s node --check match3d-v11.js
           timeout 10s node --check v6-qa-compat.js
           timeout 10s node --check scripts/patch-v5.mjs
           timeout 10s node --check scripts/patch-custom-v5.mjs
@@ -96,6 +100,7 @@ jobs:
           timeout 10s node --check scripts/patch-v8.mjs
           timeout 10s node --check scripts/patch-v9.mjs
           timeout 10s node --check scripts/patch-v10.mjs
+          timeout 10s node --check scripts/patch-v11.mjs
           timeout 10s node --check tests/validate-v5.mjs
           timeout 10s node --check tests/validate-v5-advanced.mjs
           timeout 10s node --check tests/validate-v5-custom.mjs
@@ -103,6 +108,7 @@ jobs:
           timeout 10s node --check tests/validate-v8.mjs
           timeout 10s node --check tests/validate-v9.mjs
           timeout 10s node --check tests/validate-v10.mjs
+          timeout 10s node --check tests/validate-v11.mjs
           timeout 10s node --check tests/e2e-v5.mjs
           timeout 10s node --check tests/e2e-v5-advanced.mjs
           timeout 10s node --check tests/e2e-v5-migration.mjs
@@ -113,6 +119,7 @@ jobs:
           timeout 10s node --check tests/e2e-v8.mjs
           timeout 10s node --check tests/e2e-v9.mjs
           timeout 10s node --check tests/e2e-v10.mjs
+          timeout 10s node --check tests/e2e-v11.mjs
 
       - name: V5 base data modes and rules QA
         run: timeout 30s node tests/validate-v5.mjs
@@ -128,6 +135,8 @@ jobs:
         run: timeout 30s node tests/validate-v9.mjs
       - name: V10 3D broadcast commentary and stadium QA
         run: timeout 30s node tests/validate-v10.mjs
+      - name: V11 cinematic match realism and commentary QA
+        run: timeout 30s node tests/validate-v11.mjs
 
       - name: Install browser QA runtime
         run: npm install --no-save --no-package-lock playwright-core@1.55.0
@@ -162,6 +171,9 @@ jobs:
       - name: V10 WebGL2 broadcast Turkish commentary and crowd browser QA
         run: |
           python3 -m http.server 4182 --bind 127.0.0.1 >/tmp/qf-v10.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4182/ timeout 150s node tests/e2e-v10.mjs
+      - name: V11 realistic players important-moment commentary and broadcast QA
+        run: |
+          python3 -m http.server 4183 --bind 127.0.0.1 >/tmp/qf-v11.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4183/ timeout 150s node tests/e2e-v11.mjs
 
       - name: Verify production files
         run: |
@@ -183,18 +195,23 @@ jobs:
           test -s match-details-v10.js
           test -s commentary-v10.js
           test -s v10.css
+          test -s match-flow-v11.js
+          test -s match3d-v11.js
+          test -s v11.css
           test -s cloud-v5.js
           test -s sw-v5.js
           test -s images-v4.js
           test -s manager-images-v5.js
           grep -q 'match3d-v10.js' index.html
           grep -q 'match-details-v10.js' index.html
-          grep -q 'commentary-v10.js' index.html
-          grep -q 'v10.css' index.html
-          grep -q 'Quiz Football V10' index.html
-          grep -q 'quizfootball-v10.0.0' sw-v5.js
+          grep -q 'match-flow-v11.js' index.html
+          grep -q 'match3d-v11.js' index.html
+          grep -q 'v11.css' index.html
+          grep -q 'Quiz Football V11' index.html
+          grep -q 'quizfootball-v11.0.0' sw-v5.js
           grep -q 'QF_MATCH_3D_V10' match3d-v10.js
-          grep -q 'QF_COMMENTARY_V10' commentary-v10.js
+          grep -q 'QF_MATCH_3D_V11' match3d-v11.js
+          grep -q 'QF_MATCH_FLOW_V11' match-flow-v11.js
+          grep -q 'QF_COMMENTARY_V11' commentary-v10.js
           grep -q 'QF_MATCH_DETAILS_V10' match-details-v10.js
-          grep -q 'qf:v10-event' commentary-v10.js
-          echo "V10 production bundle verified: native WebGL2 3D broadcast renderer, dynamic Turkish commentary, procedural crowd/chant ambience, replay camera and detailed match broadcast layer."
+          echo "V11 production bundle verified: articulated WebGL footballers, slow cinematic visual flow with fast clock, contextual important-moment Turkish commentary, understandable generic chant leader, real-player spotlight, replay cameras and collapsible sound controls."
