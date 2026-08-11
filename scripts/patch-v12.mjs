@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import {execFileSync} from 'node:child_process';
 function rw(path,fn){const old=fs.readFileSync(path,'utf8'),next=fn(old);if(next!==old)fs.writeFileSync(path,next)}
 rw('index.html',s=>{
   if(!s.includes('v12.css')) s=s.replace('<link rel="stylesheet" href="v11.css?v=1100" />','<link rel="stylesheet" href="v11.css?v=1100" />\n  <link rel="stylesheet" href="v12.css?v=1200" />');
@@ -12,4 +13,7 @@ rw('sw-v5.js',s=>{
   for(const f of["'./v12.css'","'./runtime-v12.js'"]) if(!s.includes(f)) s=s.replace("'./icon.svg'",`${f},'./icon.svg'`);
   return s;
 });
+if(process.env.GITHUB_ACTIONS==='true'){
+  try{execFileSync('git',['add','runtime-v12.js','match3d-v11.js','match3d-v10.js'],{stdio:'ignore'})}catch{}
+}
 console.log('V12 viewport/performance/live-crowd runtime wired.');
