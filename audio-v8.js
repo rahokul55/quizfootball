@@ -49,5 +49,6 @@ function setSetting(k,v){if(!(k in defaults))return false;settings[k]=typeof def
 function testEvent(type){dispatch(type,`QA ${type}`)}
 document.addEventListener("pointerdown",unlock,{once:true,capture:true});document.addEventListener("keydown",e=>{if(!unlocked)unlock();if(e.key?.toLowerCase()==="m"&&!/input|textarea|select/i.test(document.activeElement?.tagName||"")){settings.enabled=!settings.enabled;save()}},{capture:true});
 pollTimer=setInterval(poll,260);if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>setTimeout(poll,50),{once:true});else setTimeout(poll,50);
+window.addEventListener("qf:v9-event",e=>{const d=e.detail||{};if(!active)return;if(d.type==="card"){effect("wrong",.45);say(d.text,{priority:5})}else if(d.type==="corner"){effect("kick",.45);say(d.text,{priority:4})}else if(d.type==="offside"){tone(1750,.15,.06,"sine",0,2250);say(d.text,{priority:4})}else if(d.type==="injury"){tone(220,.24,.06,"triangle",0,150);say(d.text,{priority:5})}else if(d.type==="sub"){tone(720,.08,.04,"sine");say(d.text,{priority:4})}else if(d.type==="half"){effect("halftime");say(d.text,{priority:8,interrupt:true})}});
 window.QF_AUDIO_V8={unlock,processText,testEvent,classify,getSettings:()=>({...settings}),setSetting,state:()=>({...stats,active,mode,unlocked,voice:voice?.name||"",snapshot:getSnapshot()})};
 })();
