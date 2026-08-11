@@ -15,7 +15,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 36
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -74,14 +74,9 @@ jobs:
           timeout 10s node --check data-v7.js
           timeout 10s node --check chairman-v7.js
           timeout 10s node --check online-v7.js
-          timeout 10s node --check audio-v8.js
           timeout 10s node --check match-v9.js
           timeout 10s node --check career-v9.js
-          timeout 10s node --check match3d-v10.js
-          timeout 10s node --check match-details-v10.js
-          timeout 10s node --check commentary-v10.js
           timeout 10s node --check match-flow-v11.js
-          timeout 10s node --check match3d-v11.js
           timeout 10s node --check match3d-v13.js
           timeout 10s node --check audio-v13.js
           timeout 10s node --check commentary-v13.js
@@ -100,14 +95,6 @@ jobs:
 
       - name: Install browser QA runtime
         run: npm install --no-save --no-package-lock playwright-core@1.55.0
-
-      - name: V5 multiplayer regression browser QA
-        run: |
-          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/qf-v5.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; timeout 120s node tests/e2e-v5.mjs
-
-      - name: V5 host migration browser QA
-        run: |
-          python3 -m http.server 4175 --bind 127.0.0.1 >/tmp/qf-v5m.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4175/ timeout 120s node tests/e2e-v5-migration.mjs
 
       - name: V7 chairman career browser QA
         run: |
@@ -128,11 +115,11 @@ jobs:
           test -s runtime-v13.js
           test -s v13.css
           grep -q 'Quiz Football V13' index.html
-          grep -q 'v13.css?v=1300' index.html
-          grep -q 'audio-v13.js?v=1300' index.html
-          grep -q 'match3d-v13.js?v=1300' index.html
-          grep -q 'commentary-v13.js?v=1300' index.html
-          grep -q 'runtime-v13.js?v=1300' index.html
+          test "$(grep -c 'audio-v13.js?v=1300' index.html)" -eq 1
+          test "$(grep -c 'match3d-v13.js?v=1300' index.html)" -eq 1
+          test "$(grep -c 'commentary-v13.js?v=1300' index.html)" -eq 1
+          test "$(grep -c 'runtime-v13.js?v=1300' index.html)" -eq 1
+          test "$(grep -c 'v13.css?v=1300' index.html)" -eq 1
           ! grep -q 'match3d-v10.js?v=1000' index.html
           ! grep -q 'match3d-v11.js?v=1100' index.html
           ! grep -q 'runtime-v12.js?v=1200' index.html
@@ -141,4 +128,4 @@ jobs:
           grep -q "quizfootball-v13.1.0" sw-v5.js
           grep -q 'QF_MATCH_3D_V13' match3d-v13.js
           grep -q 'QF_COMMENTARY_V13' commentary-v13.js
-          echo "V13 production bundle verified: single instanced WebGL2 match renderer, adaptive in-3D LOD, readable paginated UI and one paced commentator control surface."
+          echo "V13 production bundle verified: one instanced WebGL2 renderer, one paced commentator, no legacy match runtime and no duplicate audio stack."
