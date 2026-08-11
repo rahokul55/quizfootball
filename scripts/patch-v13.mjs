@@ -1,26 +1,39 @@
 import fs from 'node:fs';
 function rw(path,fn){const old=fs.readFileSync(path,'utf8'),next=fn(old);if(next!==old)fs.writeFileSync(path,next)}
 rw('index.html',s=>{
-  // Rebuild the fragile beginning of <head> from a stable anchor so malformed legacy metadata cannot survive.
   const theme='  <meta name="theme-color" content="#071018" />';
   const enhanced='  <link rel="stylesheet" href="enhancements-v4.css?v=500" />';
-  const canonical=`${theme}\n  <meta name="description" content="Quiz Football V13 — akıcı 3D maç yayını, kulüp yönetimi ve futbol quiz deneyimi." />\n  <title>Quiz Football V13 — 3D Match Broadcast</title>\n  <link rel="stylesheet" href="styles.css?v=500" />\n`;
+  const canonical=`${theme}\n  <meta name="description" content="Quiz Football V13.2 — daha görünür 3D futbolcular, akıcı maç yayını ve sade spiker kontrolleri." />\n  <title>Quiz Football V13.2 — 3D Match Broadcast</title>\n  <link rel="stylesheet" href="styles.css?v=500" />\n`;
   if(s.includes(theme)&&s.includes(enhanced)) s=s.replace(new RegExp(theme.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'[\\s\\S]*?(?='+enhanced.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')'),canonical);
-  s=s.replace(/<small>V(?:11|12)<\/small>/g,'<small>V13</small>');
-
-  // CSS is canonical and unique.
+  s=s.replace(/<small>V(?:11|12|13(?:\.\d+)?)<\/small>/g,'<small>V13.2</small>');
   s=s.replace(/\s*<link rel="stylesheet" href="v13\.css\?v=\d+" \/>/g,'');
-  s=s.replace('<link rel="stylesheet" href="v12.css?v=1200" />','<link rel="stylesheet" href="v12.css?v=1200" />\n  <link rel="stylesheet" href="v13.css?v=1300" />');
-
-  // Remove every legacy or duplicate match/audio runtime before inserting exactly one V13 stack.
+  s=s.replace('<link rel="stylesheet" href="v12.css?v=1200" />','<link rel="stylesheet" href="v12.css?v=1200" />\n  <link rel="stylesheet" href="v13.css?v=1320" />');
   s=s.replace(/\s*<script src="(?:audio-v8|audio-v13|match3d-v10|match3d-v11|runtime-v12|commentary-v10|match3d-v13|commentary-v13|runtime-v13)\.js\?v=\d+"><\/script>/g,'');
-  s=s.replace('  <script src="online-v7.js?v=700"></script>','  <script src="online-v7.js?v=700"></script>\n  <script src="audio-v13.js?v=1300"></script>');
-  s=s.replace('  <script src="match-flow-v11.js?v=1100"></script>','  <script src="match-flow-v11.js?v=1100"></script>\n  <script src="match3d-v13.js?v=1300"></script>\n  <script src="commentary-v13.js?v=1300"></script>\n  <script src="runtime-v13.js?v=1300"></script>');
+  s=s.replace('  <script src="online-v7.js?v=700"></script>','  <script src="online-v7.js?v=700"></script>\n  <script src="audio-v13.js?v=1320"></script>');
+  s=s.replace('  <script src="match-flow-v11.js?v=1100"></script>','  <script src="match-flow-v11.js?v=1100"></script>\n  <script src="match3d-v13.js?v=1320"></script>\n  <script src="commentary-v13.js?v=1320"></script>\n  <script src="runtime-v13.js?v=1320"></script>');
   return s;
 });
+rw('match3d-v13.js',s=>{
+  s=s.replace('const base=level===2?1.15:level===1?.92:.72','const base=level===2?1.0:level===1?.84:.66');
+  s=s.replace('sourceCanvas.style.visibility="hidden";stats.active=true','sourceCanvas.style.visibility="hidden";sourceCanvas.style.opacity="0";canvas.style.visibility="visible";canvas.style.opacity="1";stats.active=true');
+  s=s.replace('if(sourceCanvas)sourceCanvas.style.visibility="visible";canvas?.remove()','if(sourceCanvas){sourceCanvas.style.visibility="visible";sourceCanvas.style.opacity="1"}canvas?.remove()');
+  s=s.replace('add(C,trs(pos.x,1.72,pos.z,.46,.68,.28,yaw),shirt);add(C,trs(pos.x,.98,pos.z,.39,.36,.25,yaw),short);add(S,trs(pos.x,2.70,pos.z,.31,.37,.31,yaw),pal.skin);if(q>0)add(S,trs(pos.x,2.91,pos.z-.015,.315,.16,.315,yaw),pal.hair);add(Y,trs(pos.x-.22,.58+run*.12,pos.z,.13,.50,.13,yaw,run),sock);add(Y,trs(pos.x+.22,.58-run*.12,pos.z,.13,.50,.13,yaw,-run),sock);add(Y,trs(pos.x-.53,1.72,pos.z,.11,.46,.11,yaw,-run*.75),pal.skin);add(Y,trs(pos.x+.53,1.72,pos.z,.11,.46,.11,yaw,run*.75),pal.skin);','add(C,trs(pos.x,1.78,pos.z,.54,.80,.32,yaw),shirt);add(C,trs(pos.x,1.00,pos.z,.46,.42,.29,yaw),short);add(S,trs(pos.x,2.88,pos.z,.36,.42,.36,yaw),pal.skin);if(q>0)add(S,trs(pos.x,3.10,pos.z-.015,.365,.18,.365,yaw),pal.hair);add(Y,trs(pos.x-.24,.60+run*.12,pos.z,.15,.54,.15,yaw,run),sock);add(Y,trs(pos.x+.24,.60-run*.12,pos.z,.15,.54,.15,yaw,-run),sock);add(Y,trs(pos.x-.61,1.79,pos.z,.13,.50,.13,yaw,-run*.75),pal.skin);add(Y,trs(pos.x+.61,1.79,pos.z,.13,.50,.13,yaw,run*.75),pal.skin);');
+  s=s.replace('return{eye:[fx-side*16,24,36],target:[fx*.82,1.2,fz*.72]}','return{eye:[fx-side*12,17,28],target:[fx*.88,1.4,fz*.82]}');
+  s=s.replace('return{eye:[fx-13,34,49],target:[fx*.70,0.7,fz*.46]}','return{eye:[fx-10,25,39],target:[fx*.78,1.15,fz*.60]}');
+  s=s.replace('perspective(Math.PI/4.15,sz.w/sz.h,.1,240)','perspective(Math.PI/5.05,sz.w/sz.h,.1,220)');
+  s=s.replace('stats.targetFps=level===2?60:level===1?45:30','stats.targetFps=level===2?60:level===1?40:30');
+  s=s.replace('const target=level===2?60:level===1?45:30,minGap=1000/target','const target=level===2?60:level===1?40:30,minGap=1000/target');
+  s=s.replace(/function adapt\(interval\)\{[\s\S]*?\}\nfunction loop/,`function adapt(interval){avgIntervals.push(interval);if(avgIntervals.length>72)avgIntervals.shift();if(avgIntervals.length<32)return;const avg=avgIntervals.reduce((a,b)=>a+b,0)/avgIntervals.length,fps=1000/avg;stats.avgFps=fps;const now=performance.now();if(now-lastQualityChange<2200)return;if(cfg.quality!=="auto"){level=cfg.quality==="high"?2:cfg.quality==="medium"?1:0;return}if(level===2&&fps<50){level=1;lastQualityChange=now;avgIntervals=[]}else if(level===1&&fps<36){level=0;lastQualityChange=now;avgIntervals=[]}else if(level===0&&fps>43){level=1;lastQualityChange=now;avgIntervals=[]}else if(level===1&&fps>57){level=2;lastQualityChange=now;avgIntervals=[]}}\nfunction loop`);
+  return s;
+});
+rw('v13.css',s=>{
+  const tag='/* V13_2_READABILITY_AND_3D */';
+  if(s.includes(tag))return s;
+  return s+`\n${tag}\nbody.v13-runtime .v7-nav button{font-size:13px!important;min-height:39px!important}\nbody.v13-runtime .v7-btn{font-size:12px!important;min-height:32px}\nbody.v13-runtime .v7-card h2{font-size:18px!important}body.v13-runtime .v7-card h3{font-size:15px!important}\nbody.v13-runtime .v7-card p,body.v13-runtime .v7-card li{font-size:12px!important}\nbody.v13-runtime .v7-budget-item b{font-size:15px!important}body.v13-runtime .v7-budget-item span{font-size:10px!important}\n#v7-squad .v7-player-dot{width:84px!important}#v7-squad .v7-player-dot img{width:46px!important;height:46px!important}\n#v7-match .v7-team-name b{font-size:15px!important}#v7-match .v7-team-name small{font-size:10.5px!important}#v7-match .v7-score{font-size:28px!important}\n#v7-match .v7-question>small{font-size:10.5px!important}#v7-match .v7-qclub b{font-size:13px!important}#v7-match .v7-qopt{font-size:13px!important;min-height:37px!important}\n#v7-match .v7-eventlog{font-size:11.5px!important;line-height:1.32!important}\n.v13-gl-canvas{z-index:28!important;visibility:visible!important;opacity:1!important;image-rendering:auto!important}\n.v13-broadcast-hud{z-index:38!important;top:58px!important}.v13-broadcast-hud b{font-size:11px!important}.v13-broadcast-hud span{font-size:10px!important}\n.v13-commentary-caption{font-size:15px!important;max-width:min(820px,72vw)!important}\n.v13-audio-head b{font-size:15px!important}.v13-spiker-switch{font-size:12px!important}.v13-volume span,.v13-volume b{font-size:11px!important}\n@media(min-width:1600px){body.v13-runtime .v7-nav button{font-size:14px!important}body.v13-runtime .v7-row b{font-size:13px!important}body.v13-runtime .v7-row small{font-size:11px!important}#v7-match .v7-qopt{font-size:14px!important}.v13-commentary-caption{font-size:16px!important}}\n`;
+});
 rw('sw-v5.js',s=>{
-  s=s.replace(/const CACHE='quizfootball-[^']+'/,"const CACHE='quizfootball-v13.1.0'");
+  s=s.replace(/const CACHE='quizfootball-[^']+'/,"const CACHE='quizfootball-v13.2.0'");
   for(const f of["'./v13.css'","'./audio-v13.js'","'./match3d-v13.js'","'./commentary-v13.js'","'./runtime-v13.js'"]) if(!s.includes(f)) s=s.replace("'./icon.svg'",`${f},'./icon.svg'`);
   return s;
 });
-console.log('V13.1 canonical production wiring applied: repaired head, one 3D renderer, one audio engine, one commentator.');
+console.log('V13.2 production wiring applied: closer authoritative 3D, adaptive quality, slower single-call commentator, larger readable UI and cache busting.');
