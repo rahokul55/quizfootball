@@ -59,7 +59,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html app-v5.js chairman-v7.js online-v7.js sw-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
+          git add index.html app-v5.js chairman-v7.js online-v7.js audio-v8.js sw-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
           if ! git diff --cached --quiet; then
             git commit -m "Refresh production runtime assets for V8"
             git push
@@ -221,4 +221,5 @@ jobs:
           grep -q 'direğe takıldı' online-v7.js
           grep -q 'SpeechSynthesisUtterance' audio-v8.js
           grep -q 'function startCrowd' audio-v8.js
+          grep -q 'function isMineEvent' audio-v8.js
           echo "V8 production bundle verified. Turkish commentator, procedural match SFX and stadium ambience are wired for GitHub Pages."
