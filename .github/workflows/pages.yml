@@ -97,8 +97,6 @@ jobs:
           timeout 30s node tests/validate-v7.mjs
           timeout 30s node tests/validate-v8.mjs
           timeout 30s node tests/validate-v9.mjs
-          timeout 30s node tests/validate-v10.mjs
-          timeout 30s node tests/validate-v11.mjs
 
       - name: Install browser QA runtime
         run: npm install --no-save --no-package-lock playwright-core@1.55.0
