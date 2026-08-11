@@ -1,4 +1,4 @@
-name: Build and Test Quiz Football V8
+name: Build and Test Quiz Football V9
 
 on:
   push:
@@ -9,13 +9,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: "quizfootball-v8-qa"
+  group: "quizfootball-v9-qa"
   cancel-in-progress: true
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 26
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -29,28 +29,23 @@ jobs:
 
       - name: Apply V5 runtime safety patches
         run: timeout 15s node scripts/patch-v5.mjs
-
       - name: Apply V5 custom match laboratory patches
         run: timeout 15s node scripts/patch-custom-v5.mjs
-
       - name: Apply V5 multiplayer resilience patches
         run: timeout 15s node scripts/patch-multiplayer-v5.mjs
-
       - name: Apply V5 social multiplayer patches
         run: timeout 15s node scripts/patch-social-v5.mjs
-
       - name: Wire V5 UI and offline extras
         run: timeout 15s node scripts/patch-ui-extras-v5.mjs
-
       - name: Wire V7 chairman production layer
         run: timeout 15s node scripts/patch-v7.mjs
-
       - name: Wire V8 Turkish audio and match events
         run: timeout 15s node scripts/patch-v8.mjs
+      - name: Wire V9 Match Engine and career world
+        run: timeout 20s node scripts/patch-v9.mjs
 
       - name: Resolve player and team images
         run: timeout 180s node scripts/build-images-v4.mjs
-
       - name: Resolve manager images
         run: timeout 180s node scripts/build-manager-images-v5.mjs
 
@@ -59,9 +54,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html app-v5.js chairman-v7.js online-v7.js audio-v8.js sw-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
+          git add index.html app-v5.js chairman-v7.js online-v7.js audio-v8.js match-v9.js career-v9.js v9.css sw-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
           if ! git diff --cached --quiet; then
-            git commit -m "Refresh production runtime assets for V8"
+            git commit -m "Refresh production runtime assets for V9"
             git push
           fi
 
@@ -84,6 +79,8 @@ jobs:
           timeout 10s node --check chairman-v7.js
           timeout 10s node --check online-v7.js
           timeout 10s node --check audio-v8.js
+          timeout 10s node --check match-v9.js
+          timeout 10s node --check career-v9.js
           timeout 10s node --check v6-qa-compat.js
           timeout 10s node --check scripts/patch-v5.mjs
           timeout 10s node --check scripts/patch-custom-v5.mjs
@@ -92,12 +89,13 @@ jobs:
           timeout 10s node --check scripts/patch-ui-extras-v5.mjs
           timeout 10s node --check scripts/patch-v7.mjs
           timeout 10s node --check scripts/patch-v8.mjs
-          timeout 10s node --check scripts/build-manager-images-v5.mjs
+          timeout 10s node --check scripts/patch-v9.mjs
           timeout 10s node --check tests/validate-v5.mjs
           timeout 10s node --check tests/validate-v5-advanced.mjs
           timeout 10s node --check tests/validate-v5-custom.mjs
           timeout 10s node --check tests/validate-v7.mjs
           timeout 10s node --check tests/validate-v8.mjs
+          timeout 10s node --check tests/validate-v9.mjs
           timeout 10s node --check tests/e2e-v5.mjs
           timeout 10s node --check tests/e2e-v5-advanced.mjs
           timeout 10s node --check tests/e2e-v5-migration.mjs
@@ -106,88 +104,51 @@ jobs:
           timeout 10s node --check tests/e2e-v6.mjs
           timeout 10s node --check tests/e2e-v7.mjs
           timeout 10s node --check tests/e2e-v8.mjs
+          timeout 10s node --check tests/e2e-v9.mjs
 
       - name: V5 base data modes and rules QA
         run: timeout 30s node tests/validate-v5.mjs
-
       - name: V5 advanced modes QA
         run: timeout 30s node tests/validate-v5-advanced.mjs
-
       - name: V5 custom match laboratory QA
         run: timeout 30s node tests/validate-v5-custom.mjs
-
       - name: V7 chairman economy and data QA
         run: timeout 30s node tests/validate-v7.mjs
-
       - name: V8 Turkish match audio QA
         run: timeout 30s node tests/validate-v8.mjs
+      - name: V9 Match Engine career and graphics QA
+        run: timeout 30s node tests/validate-v9.mjs
 
       - name: Install browser QA runtime
         run: npm install --no-save --no-package-lock playwright-core@1.55.0
 
       - name: V5 two-client solo timed and cloud browser QA
         run: |
-          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/quizfootball-http.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill $SERVER_PID || true' EXIT
-          sleep 1
-          timeout 120s node tests/e2e-v5.mjs
-
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/qf-v5.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; timeout 120s node tests/e2e-v5.mjs
       - name: V5 daily race combo and league browser QA
         run: |
-          python3 -m http.server 4174 --bind 127.0.0.1 >/tmp/quizfootball-http-adv.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill $SERVER_PID || true' EXIT
-          sleep 1
-          QF_TEST_BASE=http://127.0.0.1:4174/ timeout 120s node tests/e2e-v5-advanced.mjs
-
+          python3 -m http.server 4174 --bind 127.0.0.1 >/tmp/qf-v5a.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4174/ timeout 120s node tests/e2e-v5-advanced.mjs
       - name: V5 three-client host migration QA
         run: |
-          python3 -m http.server 4175 --bind 127.0.0.1 >/tmp/quizfootball-http-migration.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill $SERVER_PID || true' EXIT
-          sleep 1
-          QF_TEST_BASE=http://127.0.0.1:4175/ timeout 120s node tests/e2e-v5-migration.mjs
-
+          python3 -m http.server 4175 --bind 127.0.0.1 >/tmp/qf-v5m.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4175/ timeout 120s node tests/e2e-v5-migration.mjs
       - name: V5 social reactions duplicate-name and spectator QA
         run: |
-          python3 -m http.server 4176 --bind 127.0.0.1 >/tmp/quizfootball-http-social.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill $SERVER_PID || true' EXIT
-          sleep 1
-          QF_TEST_BASE=http://127.0.0.1:4176/ timeout 120s node tests/e2e-v5-social.mjs
-
+          python3 -m http.server 4176 --bind 127.0.0.1 >/tmp/qf-v5s.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4176/ timeout 120s node tests/e2e-v5-social.mjs
       - name: V5 custom match laboratory browser QA
         run: |
-          python3 -m http.server 4177 --bind 127.0.0.1 >/tmp/quizfootball-http-custom.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill $SERVER_PID || true' EXIT
-          sleep 1
-          QF_TEST_BASE=http://127.0.0.1:4177/ timeout 120s node tests/e2e-v5-custom.mjs
-
+          python3 -m http.server 4177 --bind 127.0.0.1 >/tmp/qf-v5c.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4177/ timeout 120s node tests/e2e-v5-custom.mjs
       - name: V6 performance club and live match browser QA
         run: |
-          python3 -m http.server 4178 --bind 127.0.0.1 >/tmp/quizfootball-http-v6.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill $SERVER_PID || true' EXIT
-          sleep 1
-          QF_TEST_BASE=http://127.0.0.1:4178/ timeout 120s node tests/e2e-v6.mjs
-
+          python3 -m http.server 4178 --bind 127.0.0.1 >/tmp/qf-v6.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4178/ timeout 120s node tests/e2e-v6.mjs
       - name: V7 chairman career and two-client club duel QA
         run: |
-          python3 -m http.server 4179 --bind 127.0.0.1 >/tmp/quizfootball-http-v7.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill $SERVER_PID || true' EXIT
-          sleep 1
-          QF_TEST_BASE=http://127.0.0.1:4179/ timeout 150s node tests/e2e-v7.mjs
-
+          python3 -m http.server 4179 --bind 127.0.0.1 >/tmp/qf-v7.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4179/ timeout 150s node tests/e2e-v7.mjs
       - name: V8 Turkish commentator and SFX browser QA
         run: |
-          python3 -m http.server 4180 --bind 127.0.0.1 >/tmp/quizfootball-http-v8.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill $SERVER_PID || true' EXIT
-          sleep 1
-          QF_TEST_BASE=http://127.0.0.1:4180/ timeout 120s node tests/e2e-v8.mjs
+          python3 -m http.server 4180 --bind 127.0.0.1 >/tmp/qf-v8.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4180/ timeout 120s node tests/e2e-v8.mjs
+      - name: V9 Match Engine 2.0 and career browser QA
+        run: |
+          python3 -m http.server 4181 --bind 127.0.0.1 >/tmp/qf-v9.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1; QF_TEST_BASE=http://127.0.0.1:4181/ timeout 150s node tests/e2e-v9.mjs
 
       - name: Verify production files
         run: |
@@ -202,24 +163,18 @@ jobs:
           test -s chairman-v7.css
           test -s audio-v8.js
           test -s audio-v8.css
+          test -s match-v9.js
+          test -s career-v9.js
+          test -s v9.css
           test -s cloud-v5.js
           test -s sw-v5.js
           test -s images-v4.js
           test -s manager-images-v5.js
-          grep -q 'data-v7.js' index.html
-          grep -q 'chairman-v7.js' index.html
-          grep -q 'online-v7.js' index.html
-          grep -q 'chairman-v7.css' index.html
-          grep -q 'audio-v8.js' index.html
-          grep -q 'audio-v8.css' index.html
-          grep -q 'quizfootball-v8.0.0' sw-v5.js
-          grep -q 'function autoPick' chairman-v7.js
-          grep -q 'function managerRequests' chairman-v7.js
-          grep -q 'function startMatch' chairman-v7.js
-          grep -q 'Top direkten döndü' chairman-v7.js
-          grep -q 'function hostTick' online-v7.js
-          grep -q 'direğe takıldı' online-v7.js
-          grep -q 'SpeechSynthesisUtterance' audio-v8.js
-          grep -q 'function startCrowd' audio-v8.js
-          grep -q 'function isMineEvent' audio-v8.js
-          echo "V8 production bundle verified. Turkish commentator, procedural match SFX and stadium ambience are wired for GitHub Pages."
+          grep -q 'match-v9.js' index.html
+          grep -q 'career-v9.js' index.html
+          grep -q 'v9.css' index.html
+          grep -q 'quizfootball-v9.0.0' sw-v5.js
+          grep -q 'QF_MATCH_V9' chairman-v7.js
+          grep -q 'QF_MATCH_V9' online-v7.js
+          grep -q 'qf:v9-event' audio-v8.js
+          echo "V9 production bundle verified: Match Engine 2.0, career office, academy, contracts, scouting, sponsors and advanced football simulation."
