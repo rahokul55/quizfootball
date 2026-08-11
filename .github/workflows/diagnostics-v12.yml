@@ -1,4 +1,4 @@
-name: Quiz Football V13 Visual Diagnostics
+name: Quiz Football V14 Visual Diagnostics
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: "quizfootball-v13-visual-diagnostics"
+  group: "quizfootball-v14-visual-diagnostics"
   cancel-in-progress: true
 
 jobs:
@@ -23,19 +23,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Apply V13 production wiring in checkout
-        run: timeout 20s node scripts/patch-v13.mjs
+      - name: Apply V14 production wiring in checkout
+        run: |
+          timeout 20s node scripts/patch-v13.mjs
+          timeout 20s node scripts/patch-v14.mjs
       - name: Install browser runtime
         run: npm install --no-save --no-package-lock playwright-core@1.55.0
-      - name: Run V13 real-browser 3D screenshot diagnostics
+      - name: Run V14 real-browser 3D screenshot diagnostics
         run: |
-          python3 -m http.server 4185 --bind 127.0.0.1 >/tmp/qf-v13diag.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1
+          python3 -m http.server 4185 --bind 127.0.0.1 >/tmp/qf-v14diag.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1
           QF_TEST_BASE=http://127.0.0.1:4185/ timeout 170s node tests/diagnose-v13.mjs
-      - name: Upload V13 diagnostic screenshots
+      - name: Run V14 frame pacing diagnostics
+        run: |
+          python3 -m http.server 4187 --bind 127.0.0.1 >/tmp/qf-v14perf.log 2>&1 & SERVER_PID=$!; trap 'kill $SERVER_PID || true' EXIT; sleep 1
+          QF_TEST_BASE=http://127.0.0.1:4187/ timeout 120s node tests/perf-v14.mjs
+      - name: Upload V14 diagnostic screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: qf-v13-diagnostics
+          name: qf-v14-diagnostics
           path: qa-artifacts-v13
           if-no-files-found: warn
           retention-days: 3
