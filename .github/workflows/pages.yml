@@ -1,4 +1,4 @@
-name: Build and Test Quiz Football V6
+name: Build and Test Quiz Football V7
 
 on:
   push:
@@ -9,13 +9,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: "quizfootball-v6-qa"
+  group: "quizfootball-v7-qa"
   cancel-in-progress: true
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 24
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -42,20 +42,23 @@ jobs:
       - name: Wire V5 UI and offline extras
         run: timeout 15s node scripts/patch-ui-extras-v5.mjs
 
+      - name: Wire V7 chairman production layer
+        run: timeout 15s node scripts/patch-v7.mjs
+
       - name: Resolve player and team images
         run: timeout 180s node scripts/build-images-v4.mjs
 
       - name: Resolve manager images
         run: timeout 180s node scripts/build-manager-images-v5.mjs
 
-      - name: Persist generated V5 assets
+      - name: Persist generated runtime assets
         if: github.actor != 'github-actions[bot]'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html app-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
+          git add index.html app-v5.js sw-v5.js images-v4.js image-report.json manager-images-v5.js manager-image-report-v5.json
           if ! git diff --cached --quiet; then
-            git commit -m "Refresh shared V5 runtime assets for V6"
+            git commit -m "Refresh production runtime assets for V7"
             git push
           fi
 
@@ -74,22 +77,28 @@ jobs:
           timeout 10s node --check data-v5-custom.js
           timeout 10s node --check data-v6.js
           timeout 10s node --check club-v6.js
+          timeout 10s node --check data-v7.js
+          timeout 10s node --check chairman-v7.js
+          timeout 10s node --check online-v7.js
           timeout 10s node --check v6-qa-compat.js
           timeout 10s node --check scripts/patch-v5.mjs
           timeout 10s node --check scripts/patch-custom-v5.mjs
           timeout 10s node --check scripts/patch-multiplayer-v5.mjs
           timeout 10s node --check scripts/patch-social-v5.mjs
           timeout 10s node --check scripts/patch-ui-extras-v5.mjs
+          timeout 10s node --check scripts/patch-v7.mjs
           timeout 10s node --check scripts/build-manager-images-v5.mjs
           timeout 10s node --check tests/validate-v5.mjs
           timeout 10s node --check tests/validate-v5-advanced.mjs
           timeout 10s node --check tests/validate-v5-custom.mjs
+          timeout 10s node --check tests/validate-v7.mjs
           timeout 10s node --check tests/e2e-v5.mjs
           timeout 10s node --check tests/e2e-v5-advanced.mjs
           timeout 10s node --check tests/e2e-v5-migration.mjs
           timeout 10s node --check tests/e2e-v5-social.mjs
           timeout 10s node --check tests/e2e-v5-custom.mjs
           timeout 10s node --check tests/e2e-v6.mjs
+          timeout 10s node --check tests/e2e-v7.mjs
 
       - name: V5 base data modes and rules QA
         run: timeout 30s node tests/validate-v5.mjs
@@ -99,6 +108,9 @@ jobs:
 
       - name: V5 custom match laboratory QA
         run: timeout 30s node tests/validate-v5-custom.mjs
+
+      - name: V7 chairman economy and data QA
+        run: timeout 30s node tests/validate-v7.mjs
 
       - name: Install browser QA runtime
         run: npm install --no-save --no-package-lock playwright-core@1.55.0
@@ -151,30 +163,36 @@ jobs:
           sleep 1
           QF_TEST_BASE=http://127.0.0.1:4178/ timeout 120s node tests/e2e-v6.mjs
 
+      - name: V7 chairman career and two-client club duel QA
+        run: |
+          python3 -m http.server 4179 --bind 127.0.0.1 >/tmp/quizfootball-http-v7.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+          QF_TEST_BASE=http://127.0.0.1:4179/ timeout 150s node tests/e2e-v7.mjs
+
       - name: Verify production files
         run: |
           test -s index.html
           test -s app-v5.js
-          test -s data-v5.js
-          test -s data-v5-plus.js
-          test -s data-v5-arcade.js
-          test -s data-v5-custom.js
           test -s data-v6.js
           test -s club-v6.js
           test -s v6.css
+          test -s data-v7.js
+          test -s chairman-v7.js
+          test -s online-v7.js
+          test -s chairman-v7.css
           test -s cloud-v5.js
-          test -s extras-v5.js
           test -s sw-v5.js
-          test -s social-v5.css
-          test -s custom-v5.css
           test -s images-v4.js
           test -s manager-images-v5.js
-          grep -q 'data-v6.js' index.html
-          grep -q 'club-v6.js' index.html
-          grep -q 'v6.css' index.html
-          grep -q 'function promoteToHost' app-v5.js
-          grep -q 'function sendReaction' app-v5.js
-          grep -q 'function startMatch' club-v6.js
-          grep -q 'function answerQuestion' club-v6.js
-          grep -q 'quizfootball-v6.0.0' sw-v5.js
-          echo "V6 production bundle verified. GitHub Pages branch deployment publishes main automatically."
+          grep -q 'data-v7.js' index.html
+          grep -q 'chairman-v7.js' index.html
+          grep -q 'online-v7.js' index.html
+          grep -q 'chairman-v7.css' index.html
+          grep -q 'quizfootball-v7.0.0' sw-v5.js
+          grep -q 'function autoPick' chairman-v7.js
+          grep -q 'function managerRequests' chairman-v7.js
+          grep -q 'function startMatch' chairman-v7.js
+          grep -q 'function hostTick' online-v7.js
+          echo "V7 production bundle verified. GitHub Pages branch deployment publishes main automatically."
